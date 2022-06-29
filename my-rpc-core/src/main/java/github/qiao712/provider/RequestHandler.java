@@ -1,7 +1,7 @@
 package github.qiao712.provider;
 
-import github.qiao712.entity.RpcRequest;
-import github.qiao712.entity.RpcResponse;
+import github.qiao712.proto.RpcRequest;
+import github.qiao712.proto.RpcResponse;
 
 public interface RequestHandler{
     RpcResponse handleRequest(RpcRequest request);

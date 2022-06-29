@@ -1,25 +1,23 @@
-package github.qiao712.provider;
+package github.qiao712.provider.server.bio;
 
-import github.qiao712.entity.RpcRequest;
-import github.qiao712.entity.RpcResponse;
 import github.qiao712.exception.RpcException;
-import github.qiao712.registry.ServiceRegistry;
+import github.qiao712.proto.*;
+import github.qiao712.provider.RequestHandler;
+import github.qiao712.provider.server.RpcServer;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @Slf4j
-public class RpcServer {
+public class BIORpcServer implements RpcServer {
     private final int port;
     private final Executor executor = Executors.newCachedThreadPool();
-    private final ServiceRegistry serviceRegistry;
     private final RequestHandler requestHandler;
+    private final MessageCoder messageCoder = new MessageCoder();
 
     /**
      * 处理一个请求的任务
@@ -36,25 +34,29 @@ public class RpcServer {
 
         @Override
         public void run() {
-            try(ObjectInputStream objectInputStream = new ObjectInputStream(clientSocket.getInputStream());
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(clientSocket.getOutputStream())) {
-
+            try(BufferedInputStream inputStream = new BufferedInputStream(clientSocket.getInputStream());
+                BufferedOutputStream outputStream = new BufferedOutputStream(clientSocket.getOutputStream())) {
                 //获取请求
-                Object requestObject = objectInputStream.readObject();
-                RpcRequest rpcRequest = null;
-                if(requestObject instanceof RpcRequest){
-                    rpcRequest = (RpcRequest) requestObject;
+                Message<Object> requestMessage = messageCoder.decodeMessage(inputStream);
+                RpcRequest rpcRequest;
+                if(requestMessage.getPayload() instanceof RpcRequest){
+                    rpcRequest = (RpcRequest) requestMessage.getPayload();
                 }else{
                     log.info("非法请求");
+                    throw new RpcException("非法请求");
                 }
 
                 //处理请求
                 RpcResponse rpcResponse = requestHandler.handleRequest(rpcRequest);
-                
+
                 //返回
-                objectOutputStream.writeObject(rpcResponse);
-            } catch (IOException | ClassNotFoundException e) {
-                log.info("请求获取失败", e);
+                Message<RpcResponse> responseMessage = new Message<>();
+                responseMessage.setMessageType(MessageType.RESPONSE);
+                responseMessage.setSerializationType(requestMessage.getSerializationType());
+                responseMessage.setPayload(rpcResponse);
+                messageCoder.encodeMessage(responseMessage, outputStream);
+            } catch (IOException e) {
+                log.error("Socket I/O 异常", e);
             } finally {
                 //关闭连接
                 try {
@@ -66,12 +68,12 @@ public class RpcServer {
         }
     }
 
-    public RpcServer(int port, ServiceRegistry serviceRegistry) {
+    public BIORpcServer(int port, RequestHandler requestHandler) {
         this.port = port;
-        this.serviceRegistry = serviceRegistry;
-        this.requestHandler = new DefaultRequestHandler(serviceRegistry);
+        this.requestHandler = requestHandler;
     }
 
+    @Override
     public void start(){
         //接收请求,并交给处理线程
         executor.execute(() -> {

@@ -1,9 +1,10 @@
 package github.qiao712.consumer.client;
 
-import github.qiao712.entity.RpcRequest;
-import github.qiao712.entity.RpcResponse;
-import github.qiao712.entity.RpcResponseCode;
+import github.qiao712.consumer.client.RpcClient;
+import github.qiao712.proto.RpcRequest;
+import github.qiao712.proto.RpcResponse;
 import github.qiao712.exception.RpcException;
+import github.qiao712.proto.RpcResponseCode;
 
 public abstract class AbstractRpcClient implements RpcClient {
     @Override

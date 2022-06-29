@@ -1,7 +1,7 @@
 package github.qiao712.consumer.client;
 
-import github.qiao712.entity.RpcRequest;
-import github.qiao712.entity.RpcResponse;
+import github.qiao712.proto.RpcRequest;
+import github.qiao712.proto.RpcResponse;
 
 /**
  * 负责向服务提供者发送请求，进行远程调用

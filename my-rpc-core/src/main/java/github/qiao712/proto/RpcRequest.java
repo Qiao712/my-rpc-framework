@@ -1,10 +1,9 @@
-package github.qiao712.entity;
+package github.qiao712.proto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
 
 @Data
 @AllArgsConstructor

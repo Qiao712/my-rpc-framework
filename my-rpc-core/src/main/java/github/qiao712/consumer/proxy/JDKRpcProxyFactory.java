@@ -14,6 +14,7 @@ public class JDKRpcProxyFactory implements RpcProxyFactory {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T createProxy(String serviceName, Class<T> cls) {
         return (T) Proxy.newProxyInstance(cls.getClassLoader(), new Class[]{cls}, new RpcInvokeHandler(serviceName));
     }
@@ -26,8 +27,9 @@ public class JDKRpcProxyFactory implements RpcProxyFactory {
         }
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        public Object invoke(Object proxy, Method method, Object[] args){
             return rpcClient.invoke(serviceName, method.getName(), args);
         }
+
     }
 }

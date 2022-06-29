@@ -1,4 +1,4 @@
-package github.qiao712.entity;
+package github.qiao712.proto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,8 +1,8 @@
 package github.qiao712.provider;
 
-import github.qiao712.entity.RpcRequest;
-import github.qiao712.entity.RpcResponse;
-import github.qiao712.entity.RpcResponseCode;
+import github.qiao712.proto.RpcRequest;
+import github.qiao712.proto.RpcResponse;
+import github.qiao712.proto.RpcResponseCode;
 import github.qiao712.registry.ServiceRegistry;
 import lombok.extern.slf4j.Slf4j;
 
@@ -10,7 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 @Slf4j
-public class DefaultRequestHandler implements RequestHandler{
+public class DefaultRequestHandler implements RequestHandler {
     private final ServiceRegistry serviceRegistry;
 
     public DefaultRequestHandler(ServiceRegistry serviceRegistry){

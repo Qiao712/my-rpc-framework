@@ -1,6 +1,6 @@
 package github.qiao712;
 
-import github.qiao712.consumer.client.BIORpcClient;
+import github.qiao712.consumer.client.bio.BIORpcClient;
 import github.qiao712.consumer.proxy.JDKRpcProxyFactory;
 import github.qiao712.consumer.client.RpcClient;
 import github.qiao712.consumer.proxy.RpcProxyFactory;
@@ -14,7 +14,7 @@ import java.io.IOException;
 public class TestConsumer {
     private static final Logger log = LoggerFactory.getLogger(TestConsumer.class);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         RpcClient rpcClient = new BIORpcClient("127.0.0.1", 9712);
         RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory(rpcClient);
         TestService testService = rpcProxyFactory.createProxy("testService", TestService.class);

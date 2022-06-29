@@ -1,4 +1,4 @@
-package github.qiao712.entity;
+package github.qiao712.proto;
 
 public enum RpcResponseCode {
     SUCCESS,

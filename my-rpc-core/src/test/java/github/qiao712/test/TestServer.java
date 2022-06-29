@@ -1,7 +1,7 @@
 package github.qiao712.test;
 
-import github.qiao712.entity.RpcRequest;
-import github.qiao712.entity.RpcResponse;
+import github.qiao712.proto.RpcRequest;
+import github.qiao712.proto.RpcResponse;
 import github.qiao712.registry.ServiceRegistry;
 import github.qiao712.registry.SimpleServiceRegistry;
 import github.qiao712.provider.DefaultRequestHandler;
@@ -20,7 +20,7 @@ public class TestServer {
     }
 
     @Test
-    public void testRequestHandler() throws NoSuchMethodException {
+    public void testRequestHandler(){
         ServiceRegistry serviceRegistry = new SimpleServiceRegistry();
         serviceRegistry.register("testService", new TestService());
         RequestHandler requestHandler = new DefaultRequestHandler(serviceRegistry);
