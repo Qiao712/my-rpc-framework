@@ -1,11 +1,11 @@
 package github.qiao712;
 
-import github.qiao712.proto.SerializationType;
-import github.qiao712.provider.DefaultRequestHandler;
-import github.qiao712.provider.RequestHandler;
-import github.qiao712.registry.ServiceRegistry;
-import github.qiao712.registry.SimpleServiceRegistry;
-import github.qiao712.provider.server.bio.BIORpcServer;
+import github.qiao712.rpc.proto.SerializationType;
+import github.qiao712.rpc.handler.DefaultRequestHandler;
+import github.qiao712.rpc.handler.RequestHandler;
+import github.qiao712.rpc.registry.ServiceRegistry;
+import github.qiao712.rpc.registry.SimpleServiceRegistry;
+import github.qiao712.rpc.transport.bio.server.BIORpcServer;
 import github.qiao712.service.TestServiceImpl;
 
 public class TestProvider {

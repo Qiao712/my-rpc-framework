@@ -1,6 +1,7 @@
 ### 当前实现:
 * 序列化:
   * JDK序列化(所有的返回值、参数必须是Serializable)
+  * Hessian序列化(所有的返回值、参数必须是Serializable)
 * 传输: 
   * 传输方式: Socket BIO
   * 传输协议:
@@ -27,6 +28,28 @@
   * 一个简单的服务名-对象Map
 * 服务发现:
   * 未实现
+
+#### 包结构
+* github.qiao712.rpc
+  * handler RequestHandler接口及其实现，处理请求调用目标方法
+  * proto 定义通信协议
+  * proxy 消费者一侧的代理相关
+  * registry 服务注册
+  * serializer 序列化方式
+  * transport 各种实现的客户端(消费者发起请求)和服务器(提供者接收处理请求)
+    * bio BIO实现
+      * client
+      * server
+    * netty Netty实现
+      * client
+      * server
+  * exception
+  * util
+  
+### TODO:
+* 优雅停机
+* 粘包处理
+* Netty通信
 
 ### 组成
 * 最基本的远程调用

@@ -3,8 +3,10 @@ package github.qiao712.test;
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
 import github.qiao712.proto.*;
-import github.qiao712.serializer.JDKSerializer;
-import github.qiao712.serializer.Serializer;
+import github.qiao712.rpc.proto.*;
+import github.qiao712.rpc.serializer.JDKSerializer;
+import github.qiao712.rpc.serializer.Serializer;
+import github.qiao712.rpc.transport.bio.MessageCodec;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;

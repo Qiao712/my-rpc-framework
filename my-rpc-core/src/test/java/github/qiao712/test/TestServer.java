@@ -1,11 +1,11 @@
 package github.qiao712.test;
 
-import github.qiao712.proto.RpcRequest;
-import github.qiao712.proto.RpcResponse;
-import github.qiao712.registry.ServiceRegistry;
-import github.qiao712.registry.SimpleServiceRegistry;
-import github.qiao712.provider.DefaultRequestHandler;
-import github.qiao712.provider.RequestHandler;
+import github.qiao712.rpc.proto.RpcRequest;
+import github.qiao712.rpc.proto.RpcResponse;
+import github.qiao712.rpc.registry.ServiceRegistry;
+import github.qiao712.rpc.registry.SimpleServiceRegistry;
+import github.qiao712.rpc.handler.DefaultRequestHandler;
+import github.qiao712.rpc.handler.RequestHandler;
 import org.junit.Test;
 
 public class TestServer {
