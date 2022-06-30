@@ -4,6 +4,7 @@ import github.qiao712.consumer.client.bio.BIORpcClient;
 import github.qiao712.consumer.proxy.JDKRpcProxyFactory;
 import github.qiao712.consumer.client.RpcClient;
 import github.qiao712.consumer.proxy.RpcProxyFactory;
+import github.qiao712.proto.SerializationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qiao712.domain.Hello;
@@ -16,6 +17,8 @@ public class TestConsumer {
 
     public static void main(String[] args) {
         RpcClient rpcClient = new BIORpcClient("127.0.0.1", 9712);
+        rpcClient.setSerializationType(SerializationType.HESSIAN_SERIALIZATION);
+
         RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory(rpcClient);
         TestService testService = rpcProxyFactory.createProxy("testService", TestService.class);
 

@@ -2,6 +2,7 @@ package github.qiao712.consumer.client;
 
 import github.qiao712.proto.RpcRequest;
 import github.qiao712.proto.RpcResponse;
+import github.qiao712.proto.SerializationType;
 
 /**
  * 负责向服务提供者发送请求，进行远程调用
@@ -16,4 +17,14 @@ public interface RpcClient {
      * 通过服务名、方法名、参数进行远程调用
      */
     Object invoke(String serviceName, String methodName, Object[] args);
+
+    /**
+     * 设置请求的序列化方式
+     */
+    void setSerializationType(SerializationType serializationType);
+
+    /**
+     * 获取请求的序列化方式
+     */
+    SerializationType getSerializationType();
 }

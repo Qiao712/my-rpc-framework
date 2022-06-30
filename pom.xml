@@ -34,6 +34,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.75</version>
+        </dependency>
+
         <!--slf4j + log4j-->
         <dependency>
             <groupId>org.slf4j</groupId>

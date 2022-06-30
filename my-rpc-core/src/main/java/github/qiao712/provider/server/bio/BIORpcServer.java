@@ -17,7 +17,8 @@ public class BIORpcServer implements RpcServer {
     private final int port;
     private final Executor executor = Executors.newCachedThreadPool();
     private final RequestHandler requestHandler;
-    private final MessageCoder messageCoder = new MessageCoder();
+    private final MessageCodec messageCodec = new MessageCodec();
+    private SerializationType serializationType = SerializationType.JDK_SERIALIZATION;
 
     /**
      * 处理一个请求的任务
@@ -37,7 +38,7 @@ public class BIORpcServer implements RpcServer {
             try(BufferedInputStream inputStream = new BufferedInputStream(clientSocket.getInputStream());
                 BufferedOutputStream outputStream = new BufferedOutputStream(clientSocket.getOutputStream())) {
                 //获取请求
-                Message<Object> requestMessage = messageCoder.decodeMessage(inputStream);
+                Message<Object> requestMessage = messageCodec.decodeMessage(inputStream);
                 RpcRequest rpcRequest;
                 if(requestMessage.getPayload() instanceof RpcRequest){
                     rpcRequest = (RpcRequest) requestMessage.getPayload();
@@ -52,9 +53,9 @@ public class BIORpcServer implements RpcServer {
                 //返回
                 Message<RpcResponse> responseMessage = new Message<>();
                 responseMessage.setMessageType(MessageType.RESPONSE);
-                responseMessage.setSerializationType(requestMessage.getSerializationType());
+                responseMessage.setSerializationType(serializationType);
                 responseMessage.setPayload(rpcResponse);
-                messageCoder.encodeMessage(responseMessage, outputStream);
+                messageCodec.encodeMessage(responseMessage, outputStream);
             } catch (IOException e) {
                 log.error("Socket I/O 异常", e);
             } finally {
@@ -91,5 +92,15 @@ public class BIORpcServer implements RpcServer {
                 throw new RpcException("启动失败", e);
             }
         });
+    }
+
+    @Override
+    public SerializationType getSerializationType() {
+        return serializationType;
+    }
+
+    @Override
+    public void setSerializationType(SerializationType serializationType) {
+        this.serializationType = serializationType;
     }
 }

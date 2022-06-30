@@ -14,11 +14,11 @@ try(BufferedOutputStream outputStream = new BufferedOutputStream(socket.getOutpu
     requestMessage.setMessageType(MessageType.RESPONSE);
     requestMessage.setSerializationType(SerializationType.JDK_SERIALIZATION);
     requestMessage.setPayload(rpcRequest);
-    messageCoder.encodeMessage(requestMessage, outputStream);
+    messageCodec.encodeMessage(requestMessage, outputStream);
     outputStream.flush();       //!!! 这里不刷新，可能不会写出，提供者接不到----一直等待。。。。
 
     //等待响应
-    Message<Object> responseMessage = messageCoder.decodeMessage(inputStream);
+    Message<Object> responseMessage = messageCodec.decodeMessage(inputStream);
 
     if(!(responseMessage.getPayload() instanceof RpcResponse)){
         throw new RpcException("响应格式错误");

@@ -12,7 +12,8 @@ import java.net.Socket;
 @Slf4j
 public class BIORpcClient extends AbstractRpcClient {
     private final InetSocketAddress serverAddress;
-    private final MessageCoder messageCoder = new MessageCoder();
+    private final MessageCodec messageCodec = new MessageCodec();
+    private SerializationType serializationType = SerializationType.JDK_SERIALIZATION;        //所使用的序列化方式
 
     public BIORpcClient(String host, int port) {
         this.serverAddress = new InetSocketAddress(host, port);
@@ -27,14 +28,14 @@ public class BIORpcClient extends AbstractRpcClient {
                 BufferedInputStream inputStream = new BufferedInputStream(socket.getInputStream())){
                 //发送请求
                 Message<RpcRequest> requestMessage = new Message<>();
-                requestMessage.setMessageType(MessageType.RESPONSE);
-                requestMessage.setSerializationType(SerializationType.JDK_SERIALIZATION);
+                requestMessage.setMessageType(MessageType.REQUEST);
+                requestMessage.setSerializationType(serializationType);
                 requestMessage.setPayload(rpcRequest);
-                messageCoder.encodeMessage(requestMessage, outputStream);
+                messageCodec.encodeMessage(requestMessage, outputStream);
                 outputStream.flush();
 
                 //等待响应
-                Message<Object> responseMessage = messageCoder.decodeMessage(inputStream);
+                Message<Object> responseMessage = messageCodec.decodeMessage(inputStream);
 
                 if(!(responseMessage.getPayload() instanceof RpcResponse)){
                     throw new RpcException("响应格式错误");
@@ -48,5 +49,15 @@ public class BIORpcClient extends AbstractRpcClient {
             log.debug("无法连接至{}", serverAddress);
             throw new RpcException("无法连接至服务提供者", e);
         }
+    }
+
+    @Override
+    public void setSerializationType(SerializationType serializationType) {
+        this.serializationType = serializationType;
+    }
+
+    @Override
+    public SerializationType getSerializationType() {
+        return serializationType;
     }
 }

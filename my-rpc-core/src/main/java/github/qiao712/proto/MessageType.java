@@ -5,7 +5,7 @@ package github.qiao712.proto;
  */
 public enum MessageType{
     REQUEST(RpcRequest.class),
-    RESPONSE(RpcRequest.class);
+    RESPONSE(RpcResponse.class);
 
     /**
      * 负载数据的对象类型

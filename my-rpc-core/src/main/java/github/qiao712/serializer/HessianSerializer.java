@@ -1,15 +1,17 @@
 package github.qiao712.serializer;
 
+import com.caucho.hessian.io.Hessian2Input;
+import com.caucho.hessian.io.Hessian2Output;
 import github.qiao712.exception.RpcSerializationException;
 
 import java.io.*;
 
-public class JDKSerializer implements Serializer{
+public class HessianSerializer implements Serializer{
     @Override
     public byte[] serialize(Object obj) {
-        try(ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()){
-            serialize(obj, byteArrayOutputStream);
-            return byteArrayOutputStream.toByteArray();
+        try(ByteArrayOutputStream outputStream = new ByteArrayOutputStream()){
+            serialize(obj, outputStream);
+            return outputStream.toByteArray();
         } catch (IOException e) {
             throw new RpcSerializationException("序列化失败", e);
         }
@@ -17,8 +19,10 @@ public class JDKSerializer implements Serializer{
 
     @Override
     public void serialize(Object obj, OutputStream outputStream) {
-        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream)){
-            objectOutputStream.writeObject(obj);
+        try {
+            Hessian2Output hessian2Output = new Hessian2Output(outputStream);
+            hessian2Output.writeObject(obj);
+            hessian2Output.flush();
         } catch (IOException e) {
             throw new RpcSerializationException("序列化失败", e);
         }
@@ -26,8 +30,8 @@ public class JDKSerializer implements Serializer{
 
     @Override
     public <T> T deserialize(byte[] data, Class<T> cls) {
-        try(ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data)){
-            return deserialize(byteArrayInputStream, cls);
+        try(ByteArrayInputStream inputStream = new ByteArrayInputStream(data)){
+            return deserialize(inputStream, cls);
         } catch (IOException e) {
             throw new RpcSerializationException("反序列化失败", e);
         }
@@ -36,12 +40,11 @@ public class JDKSerializer implements Serializer{
     @Override
     @SuppressWarnings("unchecked")
     public <T> T deserialize(InputStream inputStream, Class<T> cls) {
-        try(ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)){
-            return (T) objectInputStream.readObject();
-        } catch (IOException | ClassNotFoundException e) {
+        try {
+            Hessian2Input hessian2Input = new Hessian2Input(inputStream);
+            return (T) hessian2Input.readObject(cls);
+        } catch (IOException e) {
             throw new RpcSerializationException("反序列化失败", e);
-        } catch (ClassCastException e){
-            throw new RpcSerializationException("类型错误", e);
         }
     }
 }

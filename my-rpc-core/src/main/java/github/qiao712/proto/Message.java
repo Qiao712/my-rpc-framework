@@ -1,11 +1,9 @@
 package github.qiao712.proto;
 
-import github.qiao712.serializer.JDKSerializer;
-import github.qiao712.serializer.Serializer;
 import lombok.Data;
 
 /**
- * 传输协议的消息
+ * 传输协议报文
  */
 @Data
 public class Message<T> {

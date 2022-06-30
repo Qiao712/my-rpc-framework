@@ -5,7 +5,11 @@ import github.qiao712.serializer.Serializer;
 
 import java.io.*;
 
-public class MessageCoder {
+/**
+ * 简单的消息编解码器
+ * 消息 <---> 流 或 IO
+ */
+public class MessageCodec {
     public byte[] encodeMessage(Message<?> message){
         try(ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()){
             encodeMessage(message, byteArrayOutputStream);
@@ -107,7 +111,6 @@ public class MessageCoder {
 
             return message;
         } catch (IOException e) {
-
             throw new RpcException("消息解码错误", e);
         }
     }
