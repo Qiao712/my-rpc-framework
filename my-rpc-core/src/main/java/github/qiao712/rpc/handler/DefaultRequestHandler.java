@@ -54,7 +54,8 @@ public class DefaultRequestHandler implements RequestHandler {
         } catch (InvocationTargetException e) {
             //invoke的函数抛出异常
             log.debug("服务异常", e);
-            response = RpcResponse.fail(RpcResponseCode.METHOD_THROWING);
+            //将服务函数抛出的异常作为数据返回
+            response = RpcResponse.fail(e.getCause());
         }
 
         return response;

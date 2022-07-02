@@ -8,4 +8,5 @@ public interface TestService {
     Hello hello(Hello hi);
     String hello();
     void delay(Integer time);
+    void testThrow();
 }

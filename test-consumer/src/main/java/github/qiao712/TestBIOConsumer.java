@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 import qiao712.domain.Hello;
 import qiao712.service.TestService;
 
-public class TestConsumer {
-    private static final Logger log = LoggerFactory.getLogger(TestConsumer.class);
+public class TestBIOConsumer {
+    private static final Logger log = LoggerFactory.getLogger(TestBIOConsumer.class);
 
     public static void main(String[] args) {
         RpcClient rpcClient = new BIORpcClient("127.0.0.1", 9712);

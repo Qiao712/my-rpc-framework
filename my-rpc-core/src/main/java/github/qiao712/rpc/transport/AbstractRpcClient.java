@@ -15,7 +15,12 @@ public abstract class AbstractRpcClient implements RpcClient {
         RpcResponse rpcResponse = request(rpcRequest);
 
         if(rpcResponse.getCode() != RpcResponseCode.SUCCESS){
-            throw new RpcException("请求调用失败:" + rpcResponse.getCode());
+            if (rpcResponse.getCode() == RpcResponseCode.METHOD_THROWING){
+                //重新抛出服务提供者函数抛出的异常
+                throw new RpcException("异常返回:" + rpcResponse.getCode(), (Throwable) rpcResponse.getData());
+            }else{
+                throw new RpcException("请求失败:" + rpcResponse.getCode());
+            }
         }
 
         return rpcResponse.getData();

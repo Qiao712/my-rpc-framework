@@ -22,6 +22,7 @@ public class TestNettyConsumer {
         System.out.println(testService.add(123,123,123));
         testService.delay(6000);
         System.out.println(testService.hello(new Hello(23, "hello")));
+        testService.testThrow();
 
 //        long n = 1000;
 //        long begin = System.nanoTime();

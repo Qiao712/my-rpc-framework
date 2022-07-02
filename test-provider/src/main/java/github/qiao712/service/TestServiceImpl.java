@@ -41,4 +41,9 @@ public class TestServiceImpl implements TestService {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void testThrow() {
+        throw new ArithmeticException("test exception");
+    }
 }
