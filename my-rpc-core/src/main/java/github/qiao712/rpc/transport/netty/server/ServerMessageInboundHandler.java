@@ -3,9 +3,10 @@ package github.qiao712.rpc.transport.netty.server;
 
 import github.qiao712.rpc.handler.RequestHandler;
 import github.qiao712.rpc.proto.*;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -37,6 +38,20 @@ public class ServerMessageInboundHandler extends SimpleChannelInboundHandler<Mes
             log.debug("响应: {}", rpcResponse);
         }else{
             log.error("消费者接收到不支持的类型的消息(MessageType = {})", message.getMessageType());
+        }
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if(evt instanceof IdleStateEvent){
+            IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
+            if(idleStateEvent.state() == IdleState.READER_IDLE){
+                //清理空闲连接
+                ctx.channel().close().sync();
+                log.debug("清理空闲链接{}", ctx.channel().remoteAddress());
+            }
+        }else{
+            super.userEventTriggered(ctx, evt);
         }
     }
 }

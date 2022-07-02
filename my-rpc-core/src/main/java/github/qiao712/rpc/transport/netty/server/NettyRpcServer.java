@@ -15,7 +15,10 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class NettyRpcServer extends AbstractRpcServer {
@@ -41,6 +44,7 @@ public class NettyRpcServer extends AbstractRpcServer {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ChannelPipeline pipeline = ch.pipeline();
 
+                        pipeline.addLast(new IdleStateHandler(maxIdleTime, 0, 0, TimeUnit.MILLISECONDS));
                         pipeline.addLast(new LengthFieldBasedFrameDecoder(Message.MAX_LENGTH, 4, 4, -8, 0));
                         pipeline.addLast(new RpcMessageCodec());
                         pipeline.addLast(new ServerMessageInboundHandler(requestHandler, serializationType));

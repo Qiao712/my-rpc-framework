@@ -3,6 +3,8 @@ package github.qiao712.service;
 import qiao712.domain.Hello;
 import qiao712.service.TestService;
 
+import java.util.concurrent.TimeUnit;
+
 public class TestServiceImpl implements TestService {
 
     @Override
@@ -28,5 +30,15 @@ public class TestServiceImpl implements TestService {
     public String hello() {
         System.out.println("hello..");
         return "hellooooo";
+    }
+
+    @Override
+    public void delay(Integer time){
+        System.out.println("等待" + time + "ms");
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

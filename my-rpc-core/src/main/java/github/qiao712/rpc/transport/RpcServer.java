@@ -1,17 +1,20 @@
 package github.qiao712.rpc.transport;
 
+import github.qiao712.rpc.handler.RequestHandler;
 import github.qiao712.rpc.proto.SerializationType;
 
 public interface RpcServer {
     void start();
 
-    /**
-     * 设置响应的序列化方式
-     */
+    RequestHandler getRequestHandler();
+
+    void setRequestHandler(RequestHandler requestHandler);
+
     void setSerializationType(SerializationType serializationType);
 
-    /**
-     * 获取响应的序列化方式
-     */
     SerializationType getSerializationType();
+
+    int getMaxIdleTime();
+
+    void setMaxIdleTime(int maxIdleTime);
 }

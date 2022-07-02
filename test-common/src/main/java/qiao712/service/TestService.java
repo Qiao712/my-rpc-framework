@@ -7,4 +7,5 @@ public interface TestService {
     Integer add(Integer a, Integer b, Integer c);
     Hello hello(Hello hi);
     String hello();
+    void delay(Integer time);
 }

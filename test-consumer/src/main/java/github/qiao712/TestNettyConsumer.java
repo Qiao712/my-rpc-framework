@@ -20,15 +20,16 @@ public class TestNettyConsumer {
 
         System.out.println(testService.add(123, 123));
         System.out.println(testService.add(123,123,123));
+        testService.delay(6000);
         System.out.println(testService.hello(new Hello(23, "hello")));
 
-        long n = 1000;
-        long begin = System.nanoTime();
-        for(int i = 0; i < n; i++){
-            testService.add(231, 123);
-        }
-        long end = System.nanoTime();
-
-        log.debug("{}次调用耗时{}ms", n, (end-begin)/1000000.0);
+//        long n = 1000;
+//        long begin = System.nanoTime();
+//        for(int i = 0; i < n; i++){
+//            testService.add(231, 123);
+//        }
+//        long end = System.nanoTime();
+//
+//        log.debug("{}次调用耗时{}ms", n, (end-begin)/1000000.0);
     }
 }

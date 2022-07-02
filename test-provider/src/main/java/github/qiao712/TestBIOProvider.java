@@ -8,7 +8,7 @@ import github.qiao712.rpc.registry.SimpleServiceRegistry;
 import github.qiao712.rpc.transport.bio.server.BIORpcServer;
 import github.qiao712.service.TestServiceImpl;
 
-public class TestProvider {
+public class TestBIOProvider {
     public static void main(String[] args) {
         ServiceRegistry serviceRegistry = new SimpleServiceRegistry();
         serviceRegistry.register("testService", new TestServiceImpl());

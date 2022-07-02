@@ -10,7 +10,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * 同步的处理请求
+ * 同步地处理请求
+ * 无处理业务的线程池
  */
 @Slf4j
 public class DefaultRequestHandler implements RequestHandler {
@@ -26,7 +27,7 @@ public class DefaultRequestHandler implements RequestHandler {
 
         if(service == null){
             log.debug("未找到服务:{}", request.getServiceName());
-            return RpcResponse.bad(RpcResponseCode.SERVICE_NOT_FOUND);
+            return RpcResponse.fail(RpcResponseCode.SERVICE_NOT_FOUND);
         }
 
         //获取方法
@@ -43,17 +44,17 @@ public class DefaultRequestHandler implements RequestHandler {
 
             //反射调用
             Object returnValue = method.invoke(service, arguments);
-            response = RpcResponse.ok(returnValue);
+            response = RpcResponse.succeed(returnValue);
         } catch (NoSuchMethodException e) {
             log.debug("未找到方法", e);
-            response = RpcResponse.bad(RpcResponseCode.METHOD_NOT_FOUND);
+            response = RpcResponse.fail(RpcResponseCode.METHOD_NOT_FOUND);
         } catch (IllegalAccessException e) {
             log.debug("调用失败", e);
-            response = RpcResponse.bad();
+            response = RpcResponse.fail();
         } catch (InvocationTargetException e) {
             //invoke的函数抛出异常
             log.debug("服务异常", e);
-            response = RpcResponse.bad(RpcResponseCode.METHOD_THROWING);
+            response = RpcResponse.fail(RpcResponseCode.METHOD_THROWING);
         }
 
         return response;

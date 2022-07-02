@@ -13,15 +13,15 @@ public class RpcResponse implements Serializable {
     private RpcResponseCode code;
     private Object data;
 
-    public static RpcResponse ok(Object data){
+    public static RpcResponse succeed(Object data){
         return new RpcResponse(RpcResponseCode.SUCCESS, data);
     }
 
-    public static RpcResponse bad(RpcResponseCode code){
+    public static RpcResponse fail(RpcResponseCode code){
         return new RpcResponse(code, null);
     }
 
-    public static RpcResponse bad(){
-        return bad(RpcResponseCode.FAILURE);
+    public static RpcResponse fail(){
+        return fail(RpcResponseCode.FAILURE);
     }
 }
