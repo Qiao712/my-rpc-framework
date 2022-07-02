@@ -1,26 +1,26 @@
 package github.qiao712.rpc.transport.bio.server;
 
 import github.qiao712.rpc.exception.RpcException;
-import github.qiao712.proto.*;
 import github.qiao712.rpc.handler.RequestHandler;
 import github.qiao712.rpc.proto.*;
+import github.qiao712.rpc.transport.AbstractRpcServer;
 import github.qiao712.rpc.transport.RpcServer;
-import github.qiao712.rpc.transport.bio.MessageCodec;
+import github.qiao712.rpc.transport.bio.RpcMessageCodec;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @Slf4j
-public class BIORpcServer implements RpcServer {
+public class BIORpcServer extends AbstractRpcServer {
     private final int port;
     private final Executor executor = Executors.newCachedThreadPool();
-    private final RequestHandler requestHandler;
-    private final MessageCodec messageCodec = new MessageCodec();
-    private SerializationType serializationType = SerializationType.JDK_SERIALIZATION;
+    private final RpcMessageCodec rpcMessageCodec = new RpcMessageCodec();
 
     /**
      * 处理一个请求的任务
@@ -40,7 +40,7 @@ public class BIORpcServer implements RpcServer {
             try(BufferedInputStream inputStream = new BufferedInputStream(clientSocket.getInputStream());
                 BufferedOutputStream outputStream = new BufferedOutputStream(clientSocket.getOutputStream())) {
                 //获取请求
-                Message<Object> requestMessage = messageCodec.decodeMessage(inputStream);
+                Message<Object> requestMessage = rpcMessageCodec.decodeMessage(inputStream);
                 RpcRequest rpcRequest;
                 if(requestMessage.getPayload() instanceof RpcRequest){
                     rpcRequest = (RpcRequest) requestMessage.getPayload();
@@ -56,8 +56,9 @@ public class BIORpcServer implements RpcServer {
                 Message<RpcResponse> responseMessage = new Message<>();
                 responseMessage.setMessageType(MessageType.RESPONSE);
                 responseMessage.setSerializationType(serializationType);
+                responseMessage.setRequestId(requestMessage.getRequestId());    //消费者的实现可能是需要request id的实现(Netty)
                 responseMessage.setPayload(rpcResponse);
-                messageCodec.encodeMessage(responseMessage, outputStream);
+                rpcMessageCodec.encodeMessage(responseMessage, outputStream);
             } catch (IOException e) {
                 log.error("Socket I/O 异常", e);
             } finally {
@@ -71,9 +72,13 @@ public class BIORpcServer implements RpcServer {
         }
     }
 
-    public BIORpcServer(int port, RequestHandler requestHandler) {
+    public BIORpcServer(int port, RequestHandler requestHandler){
+        this(port, requestHandler, SerializationType.JDK_SERIALIZATION);
+    }
+
+    public BIORpcServer(int port, RequestHandler requestHandler, SerializationType serializationType) {
+        super(requestHandler, serializationType);
         this.port = port;
-        this.requestHandler = requestHandler;
     }
 
     @Override
@@ -94,15 +99,5 @@ public class BIORpcServer implements RpcServer {
                 throw new RpcException("启动失败", e);
             }
         });
-    }
-
-    @Override
-    public SerializationType getSerializationType() {
-        return serializationType;
-    }
-
-    @Override
-    public void setSerializationType(SerializationType serializationType) {
-        this.serializationType = serializationType;
     }
 }

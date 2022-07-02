@@ -2,11 +2,11 @@ package github.qiao712.test;
 
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
-import github.qiao712.proto.*;
 import github.qiao712.rpc.proto.*;
 import github.qiao712.rpc.serializer.JDKSerializer;
 import github.qiao712.rpc.serializer.Serializer;
-import github.qiao712.rpc.transport.bio.MessageCodec;
+import github.qiao712.rpc.transport.bio.RpcMessageCodec;
+import github.qiao712.rpc.util.AutoIncrementIdGenerator;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -26,7 +26,7 @@ public class TestSomething {
 
     @Test
     public void testMessageCoder(){
-        MessageCodec messageCodec = new MessageCodec();
+        RpcMessageCodec rpcMessageCodec = new RpcMessageCodec();
 
         RpcRequest rpcRequest = new RpcRequest("testService", "testMethod", new Object[0]);
         Message<RpcRequest> message = new Message<>();
@@ -34,12 +34,12 @@ public class TestSomething {
         message.setMessageType(MessageType.REQUEST);
         message.setSerializationType(SerializationType.JDK_SERIALIZATION);
 
-        byte[] data = messageCodec.encodeMessage(message);
+        byte[] data = rpcMessageCodec.encodeMessage(message);
 
         //检查encodeMessage置入的长度字段是否正确
         assert data.length == message.getLength();
 
-        Message<Object> originMessage = messageCodec.decodeMessage(data);
+        Message<Object> originMessage = rpcMessageCodec.decodeMessage(data);
 
         System.out.println(originMessage);
     }
@@ -120,5 +120,48 @@ public class TestSomething {
         output.close();
 
         byteArrayOutputStream.write(123);
+    }
+
+    /**
+     * 测试线程安全的自增ID
+     */
+    @Test
+    public void testIdGenerator(){
+        int threadNum = 5;
+        int n = 10;
+
+        AutoIncrementIdGenerator autoIncrementIdGenerator = new AutoIncrementIdGenerator();
+        boolean[] flag = new boolean[threadNum * n];
+        Thread[] threads = new Thread[threadNum];
+
+        for(int i = 0; i < threadNum; i++){
+            threads[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    for(int i = 0; i < n; i++){
+                        int id = autoIncrementIdGenerator.generateId();
+                        flag[id] = true;
+                        System.out.println(Thread.currentThread() + " : "+ id);
+                    }
+                }
+            });
+
+            threads[i].start();
+        }
+
+        for(int i = 0; i < threadNum; i++){
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //检查[0, threadNum * n]是否都被覆盖
+        for(int i = 0; i < threadNum * n; i++){
+            if(! flag[i]){
+                System.out.println("!!!!!!");
+            }
+        }
     }
 }

@@ -9,6 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * 同步的处理请求
+ */
 @Slf4j
 public class DefaultRequestHandler implements RequestHandler {
     private final ServiceRegistry serviceRegistry;

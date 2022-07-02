@@ -23,4 +23,10 @@ public class TestServiceImpl implements TestService {
         hi2.setHello("Hello from Provider");
         return hi2;
     }
+
+    @Override
+    public String hello() {
+        System.out.println("hello..");
+        return "hellooooo";
+    }
 }
