@@ -1,8 +1,6 @@
 package github.qiao712.rpc.transport.netty.client;
 
 import github.qiao712.rpc.exception.RpcException;
-import github.qiao712.rpc.transport.netty.client.ClientChannelInitializer;
-import github.qiao712.rpc.transport.netty.client.NettyRpcClient;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -17,7 +15,6 @@ import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * 客户端的简易连接池
@@ -45,9 +42,7 @@ public class ClientChannelPool {
      * 从池中取得channel或建立新channel
      * 若channel失效，将重新连接
      */
-    public Channel getChannel(String host, int port) {
-        InetSocketAddress socketAddress = new InetSocketAddress(host, port);
-
+    public Channel getChannel(SocketAddress socketAddress) {
         return channels.compute(socketAddress, new BiFunction<SocketAddress, Channel, Channel>() {
             @Override
             public Channel apply(SocketAddress socketAddress, Channel channel) {
@@ -70,12 +65,10 @@ public class ClientChannelPool {
     /**
      * 关闭并移除连接
      */
-    public Channel removeChannel(String host, int port){
-        InetSocketAddress socketAddress = new InetSocketAddress(host, port);
+    public Channel removeChannel(InetSocketAddress socketAddress){
         Channel channel = channels.remove(socketAddress);
-        if(channel != null){
+        if(channel != null && (channel.isOpen() || channel.isActive())){
             ChannelFuture channelFuture = channel.close();
-            //异步的关闭
         }
         return channel;
     }

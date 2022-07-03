@@ -23,6 +23,6 @@ public class ClientChannelInitializer extends ChannelInitializer<SocketChannel> 
 
         pipeline.addLast(new LengthFieldBasedFrameDecoder(Message.MAX_LENGTH, 4, 4, -8, 0));
         pipeline.addLast(new RpcMessageCodec());
-        pipeline.addLast(new ClientMessageInboundHandler(nettyRpcClient.getWaitingRequestPool()));
+        pipeline.addLast(new ClientMessageInboundHandler(nettyRpcClient.getWaitingRequestPool(), nettyRpcClient.getClientChannelPool()));
     }
 }

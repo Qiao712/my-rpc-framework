@@ -21,10 +21,6 @@ public class RpcResponse implements Serializable {
         return new RpcResponse(code, null);
     }
 
-    public static RpcResponse fail(){
-        return fail(RpcResponseCode.FAILURE);
-    }
-
     public static RpcResponse fail(Throwable e) {
         return new RpcResponse(RpcResponseCode.METHOD_THROWING, e);
     }

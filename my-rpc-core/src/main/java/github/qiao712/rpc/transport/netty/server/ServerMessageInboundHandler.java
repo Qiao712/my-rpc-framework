@@ -45,7 +45,7 @@ public class ServerMessageInboundHandler extends SimpleChannelInboundHandler<Mes
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if(evt instanceof IdleStateEvent){
             IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
-            if(idleStateEvent.state() == IdleState.READER_IDLE){
+            if(idleStateEvent.state() == IdleState.ALL_IDLE){
                 //清理空闲连接
                 ctx.channel().close().sync();
                 log.debug("清理空闲链接{}", ctx.channel().remoteAddress());

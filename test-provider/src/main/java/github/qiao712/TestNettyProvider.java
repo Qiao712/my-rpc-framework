@@ -14,7 +14,7 @@ public class TestNettyProvider {
         serviceRegistry.register("testService", new TestServiceImpl());
         RequestHandler requestHandler = new DefaultRequestHandler(serviceRegistry);
         RpcServer rpcServer = new NettyRpcServer(9712, requestHandler);
-        rpcServer.setMaxIdleTime(1000);
+        rpcServer.setMaxIdleTime(3000);
         rpcServer.start();
     }
 }

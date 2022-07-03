@@ -14,7 +14,7 @@ public interface RpcServer {
 
     SerializationType getSerializationType();
 
-    int getMaxIdleTime();
+    long getMaxIdleTime();
 
-    void setMaxIdleTime(int maxIdleTime);
+    void setMaxIdleTime(long maxIdleTime);
 }

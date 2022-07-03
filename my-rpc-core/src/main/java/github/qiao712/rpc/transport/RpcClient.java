@@ -18,13 +18,17 @@ public interface RpcClient {
      */
     Object invoke(String serviceName, String methodName, Object[] args);
 
-    /**
-     * 设置请求的序列化方式
-     */
     void setSerializationType(SerializationType serializationType);
 
-    /**
-     * 获取请求的序列化方式
-     */
     SerializationType getSerializationType();
+
+    /**
+     * 获取响应的超时时间(ms). 为0表示一直等待.
+     */
+    long getResponseTimeout();
+
+    /**
+     * 设置响应的超时时间(ms). 为0表示一直等待.
+     */
+    void setResponseTimeout(long timeout);
 }

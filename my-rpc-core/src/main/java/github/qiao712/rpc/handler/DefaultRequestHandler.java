@@ -50,7 +50,7 @@ public class DefaultRequestHandler implements RequestHandler {
             response = RpcResponse.fail(RpcResponseCode.METHOD_NOT_FOUND);
         } catch (IllegalAccessException e) {
             log.debug("调用失败", e);
-            response = RpcResponse.fail();
+            response = RpcResponse.fail(RpcResponseCode.SERVER_ERROR);
         } catch (InvocationTargetException e) {
             //invoke的函数抛出异常
             log.debug("服务异常", e);

@@ -8,7 +8,7 @@ public abstract class AbstractRpcServer implements RpcServer{
     protected SerializationType serializationType;
 
     //连接最长空闲时间(ms)。空闲时间超出后断开。为0标识不断开。
-    protected int maxIdleTime = 0;
+    protected long maxIdleTime = 0;
 
     public AbstractRpcServer(RequestHandler requestHandler, SerializationType serializationType) {
         this.requestHandler = requestHandler;
@@ -36,12 +36,12 @@ public abstract class AbstractRpcServer implements RpcServer{
     }
 
     @Override
-    public int getMaxIdleTime() {
+    public long getMaxIdleTime() {
         return maxIdleTime;
     }
 
     @Override
-    public void setMaxIdleTime(int maxIdleTime) {
+    public void setMaxIdleTime(long maxIdleTime) {
         this.maxIdleTime = maxIdleTime;
     }
 }

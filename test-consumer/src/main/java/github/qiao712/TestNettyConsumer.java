@@ -14,13 +14,14 @@ public class TestNettyConsumer {
     public static void main(String[] args) {
         RpcClient rpcClient = new NettyRpcClient("127.0.0.1", 9712);
         rpcClient.setSerializationType(SerializationType.HESSIAN_SERIALIZATION);
+        rpcClient.setResponseTimeout(1000L);
 
         RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory(rpcClient);
         TestService testService = rpcProxyFactory.createProxy("testService", TestService.class);
 
         System.out.println(testService.add(123, 123));
         System.out.println(testService.add(123,123,123));
-        testService.delay(6000);
+        testService.delay(3000);
         System.out.println(testService.hello(new Hello(23, "hello")));
         testService.testThrow();
 
