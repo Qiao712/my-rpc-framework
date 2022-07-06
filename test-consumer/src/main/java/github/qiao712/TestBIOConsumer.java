@@ -1,5 +1,9 @@
 package github.qiao712;
 
+import github.qiao712.rpc.proxy.DefaultInvoker;
+import github.qiao712.rpc.proxy.Invoker;
+import github.qiao712.rpc.registry.ServiceDiscovery;
+import github.qiao712.rpc.registry.zookeeper.ZookeeperServiceDiscovery;
 import github.qiao712.rpc.transport.bio.client.BIORpcClient;
 import github.qiao712.rpc.proxy.JDKRpcProxyFactory;
 import github.qiao712.rpc.transport.RpcClient;
@@ -10,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import qiao712.domain.Hello;
 import qiao712.service.TestService;
 
+import java.net.InetSocketAddress;
+
 public class TestBIOConsumer {
     private static final Logger log = LoggerFactory.getLogger(TestBIOConsumer.class);
 
@@ -17,8 +23,13 @@ public class TestBIOConsumer {
         RpcClient rpcClient = new BIORpcClient("127.0.0.1", 9712);
         rpcClient.setSerializationType(SerializationType.HESSIAN_SERIALIZATION);
 
-        RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory(rpcClient);
-        TestService testService = rpcProxyFactory.createProxy("testService", TestService.class);
+        ServiceDiscovery serviceDiscovery = new ZookeeperServiceDiscovery(new InetSocketAddress("8.141.151.176", 9712));
+
+        Invoker invoker = new DefaultInvoker(rpcClient, serviceDiscovery);
+
+        RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory(invoker);
+
+        TestService testService = rpcProxyFactory.createProxy(TestService.class);
 
         System.out.println(testService.add(123, 123));
         System.out.println(testService.add(123,123,123));

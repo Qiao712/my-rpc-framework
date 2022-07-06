@@ -29,8 +29,8 @@ public class NettyRpcClient extends AbstractRpcClient {
     }
 
     @Override
-    public RpcResponse request(RpcRequest rpcRequest) {
-        Channel channel = clientChannelPool.getChannel(new InetSocketAddress(host, port));
+    public RpcResponse request(InetSocketAddress providerAddress, RpcRequest rpcRequest) {
+        Channel channel = clientChannelPool.getChannel(providerAddress);
 
         Message<RpcRequest> requestMessage = new Message<>();
         requestMessage.setMessageType(MessageType.REQUEST);

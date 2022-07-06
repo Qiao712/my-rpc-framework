@@ -91,7 +91,10 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
     @Override
     public Set<InetSocketAddress> getServiceInstances(String serviceName) {
         Set<InetSocketAddress> providerAddress = providerMap.get(serviceName);
-        return providerAddress != null ? providerAddress : Collections.emptySet();
+        if(providerAddress == null){
+            throw new RpcException("未订阅服务(" + serviceName + ")");
+        }
+        return providerAddress;
     }
 
     @Override

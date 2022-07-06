@@ -12,23 +12,6 @@ public abstract class AbstractRpcClient implements RpcClient {
     protected long responseTimeout = 0;      //响应的超时时间(ms). 为0表示一直等待.
 
     @Override
-    public Object invoke(String serviceName, String methodName, Object[] args) {
-        RpcRequest rpcRequest = new RpcRequest(serviceName, methodName, args);
-        RpcResponse rpcResponse = request(rpcRequest);
-
-        if(rpcResponse.getCode() != RpcResponseCode.SUCCESS){
-            if (rpcResponse.getCode() == RpcResponseCode.METHOD_THROWING){
-                //重新抛出服务提供者函数抛出的异常
-                throw new RpcException("异常返回:" + rpcResponse.getCode(), (Throwable) rpcResponse.getData());
-            }else{
-                throw new RpcException("请求失败:" + rpcResponse.getCode());
-            }
-        }
-
-        return rpcResponse.getData();
-    }
-
-    @Override
     public SerializationType getSerializationType() {
         return serializationType;
     }

@@ -25,7 +25,7 @@ public class BIORpcClient extends AbstractRpcClient {
     }
 
     @Override
-    public RpcResponse request(RpcRequest rpcRequest) {
+    public RpcResponse request(InetSocketAddress providerAddress, RpcRequest rpcRequest) {
         try(Socket socket = new Socket()){
             socket.connect(serverAddress);
 

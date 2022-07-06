@@ -1,34 +1,32 @@
 package github.qiao712.rpc.proxy;
 
-import github.qiao712.rpc.transport.RpcClient;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 public class JDKRpcProxyFactory implements RpcProxyFactory {
-    private final RpcClient rpcClient;
+    private final Invoker invoker;
 
-    public JDKRpcProxyFactory(RpcClient rpcClient){
-        this.rpcClient = rpcClient;
+    public JDKRpcProxyFactory(Invoker invoker){
+        this.invoker = invoker;
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T createProxy(String serviceName, Class<T> cls) {
-        return (T) Proxy.newProxyInstance(cls.getClassLoader(), new Class[]{cls}, new RpcInvokeHandler(serviceName));
+    public <T> T createProxy(Class<T> cls) {
+        return (T) Proxy.newProxyInstance(cls.getClassLoader(), new Class[]{cls}, new RpcProxyInvocationHandler(cls.getCanonicalName()));
     }
 
-    private class RpcInvokeHandler implements InvocationHandler {
+    private class RpcProxyInvocationHandler implements InvocationHandler {
         private final String serviceName;
 
-        public RpcInvokeHandler(String serviceName) {
+        public RpcProxyInvocationHandler(String serviceName) {
             this.serviceName = serviceName;
         }
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args){
-            return rpcClient.invoke(serviceName, method.getName(), args);
+            return invoker.invoke(serviceName, method.getName(), args);
         }
 
     }
