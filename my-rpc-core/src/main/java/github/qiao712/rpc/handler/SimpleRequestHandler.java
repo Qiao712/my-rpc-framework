@@ -3,6 +3,7 @@ package github.qiao712.rpc.handler;
 import github.qiao712.rpc.proto.RpcRequest;
 import github.qiao712.rpc.proto.RpcResponse;
 import github.qiao712.rpc.proto.RpcResponseCode;
+import github.qiao712.rpc.registry.ServiceProvider;
 import github.qiao712.rpc.registry.ServiceRegistry;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,16 +15,16 @@ import java.lang.reflect.Method;
  * 无处理业务的线程池
  */
 @Slf4j
-public class DefaultRequestHandler implements RequestHandler {
-    private final ServiceRegistry serviceRegistry;
+public class SimpleRequestHandler implements RequestHandler {
+    private final ServiceProvider serviceProvider;
 
-    public DefaultRequestHandler(ServiceRegistry serviceRegistry){
-        this.serviceRegistry = serviceRegistry;
+    public SimpleRequestHandler(ServiceProvider serviceProvider){
+        this.serviceProvider = serviceProvider;
     }
 
     @Override
     public RpcResponse handleRequest(RpcRequest request) {
-        Object service = serviceRegistry.getService(request.getServiceName());
+        Object service = serviceProvider.getService(request.getServiceName());
 
         if(service == null){
             log.debug("未找到服务:{}", request.getServiceName());

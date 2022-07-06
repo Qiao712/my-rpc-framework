@@ -1,10 +1,11 @@
 package github.qiao712.rpc.registry;
 
 /**
- * 注册服务
+ * 服务注册
+ * 发布服务信息(地址、端口)，以使该服务可被发现
  */
 public interface ServiceRegistry {
-    void register(String serviceName, Object service);
+    void register(String serviceName);
 
-    Object getService(String serviceName);
+    void unregister(String serviceName);
 }
