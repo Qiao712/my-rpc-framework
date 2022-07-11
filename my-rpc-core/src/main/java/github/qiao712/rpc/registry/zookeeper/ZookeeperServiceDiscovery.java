@@ -13,6 +13,7 @@ import org.apache.zookeeper.Watcher;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -89,12 +90,12 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
     }
 
     @Override
-    public Set<InetSocketAddress> getServiceInstances(String serviceName) {
+    public List<InetSocketAddress> getServiceInstances(String serviceName) {
         Set<InetSocketAddress> providerAddress = providerMap.get(serviceName);
         if(providerAddress == null){
             throw new RpcException("未订阅服务(" + serviceName + ")");
         }
-        return providerAddress;
+        return new ArrayList<>(providerAddress);
     }
 
     @Override

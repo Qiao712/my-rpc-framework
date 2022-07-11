@@ -1,7 +1,9 @@
 package github.qiao712;
 
-import github.qiao712.rpc.proxy.DefaultInvoker;
-import github.qiao712.rpc.proxy.Invoker;
+import github.qiao712.rpc.invoker.DefaultInvoker;
+import github.qiao712.rpc.invoker.Invoker;
+import github.qiao712.rpc.loadbalance.ConsistentHashLoadBalance;
+import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.registry.zookeeper.ZookeeperServiceDiscovery;
 import github.qiao712.rpc.transport.bio.client.BIORpcClient;
@@ -25,7 +27,7 @@ public class TestBIOConsumer {
 
         ServiceDiscovery serviceDiscovery = new ZookeeperServiceDiscovery(new InetSocketAddress("8.141.151.176", 9712));
 
-        Invoker invoker = new DefaultInvoker(rpcClient, serviceDiscovery);
+        Invoker invoker = new DefaultInvoker(rpcClient, serviceDiscovery, new ConsistentHashLoadBalance());
 
         RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory(invoker);
 

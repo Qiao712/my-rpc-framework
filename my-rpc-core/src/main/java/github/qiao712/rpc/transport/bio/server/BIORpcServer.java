@@ -73,11 +73,7 @@ public class BIORpcServer extends AbstractRpcServer {
     }
 
     public BIORpcServer(int port, RequestHandler requestHandler){
-        this(port, requestHandler, SerializationType.JDK_SERIALIZATION);
-    }
-
-    public BIORpcServer(int port, RequestHandler requestHandler, SerializationType serializationType) {
-        super(requestHandler, serializationType);
+        super(requestHandler);
         this.port = port;
     }
 

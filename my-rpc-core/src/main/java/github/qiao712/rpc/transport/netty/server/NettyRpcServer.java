@@ -28,11 +28,7 @@ public class NettyRpcServer extends AbstractRpcServer {
     private final EventLoopGroup workerLoopGroup = new NioEventLoopGroup();
 
     public NettyRpcServer(int port, RequestHandler requestHandler){
-        this(port, requestHandler, SerializationType.JDK_SERIALIZATION);
-    }
-
-    public NettyRpcServer(int port, RequestHandler requestHandler, SerializationType serializationType) {
-        super(requestHandler, serializationType);
+        super(requestHandler);
         this.port = port;
 
         serverBootstrap.group(bossLoopGroup, workerLoopGroup)
@@ -58,7 +54,7 @@ public class NettyRpcServer extends AbstractRpcServer {
         try {
             serverBootstrap.bind(port).sync();
             log.info("在端口{}上监听", port);
-        } catch (Throwable e){
+        } catch (RuntimeException | InterruptedException e){
             log.error("服务器启动失败", e);
             throw new RpcException("服务器启动失败:", e);
         }

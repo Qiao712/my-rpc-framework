@@ -1,5 +1,7 @@
 package github.qiao712.rpc.proxy;
 
+import github.qiao712.rpc.invoker.Invoker;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;

@@ -5,14 +5,13 @@ import github.qiao712.rpc.proto.SerializationType;
 
 public abstract class AbstractRpcServer implements RpcServer{
     protected RequestHandler requestHandler;
-    protected SerializationType serializationType;
+    protected SerializationType serializationType = SerializationType.JDK_SERIALIZATION;
 
     //连接最长空闲时间(ms)。空闲时间超出后断开。为0标识不断开。
     protected long maxIdleTime = 0;
 
-    public AbstractRpcServer(RequestHandler requestHandler, SerializationType serializationType) {
+    public AbstractRpcServer(RequestHandler requestHandler) {
         this.requestHandler = requestHandler;
-        this.serializationType = serializationType;
     }
 
     @Override

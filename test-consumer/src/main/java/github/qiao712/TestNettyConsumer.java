@@ -1,9 +1,11 @@
 package github.qiao712;
 
-import com.caucho.hessian.test.Test;
+import github.qiao712.rpc.invoker.DefaultInvoker;
+import github.qiao712.rpc.invoker.Invoker;
+import github.qiao712.rpc.loadbalance.ConsistentHashLoadBalance;
+import github.qiao712.rpc.loadbalance.LoadBalance;
+import github.qiao712.rpc.loadbalance.RandomLoadBalance;
 import github.qiao712.rpc.proto.SerializationType;
-import github.qiao712.rpc.proxy.DefaultInvoker;
-import github.qiao712.rpc.proxy.Invoker;
 import github.qiao712.rpc.proxy.JDKRpcProxyFactory;
 import github.qiao712.rpc.proxy.RpcProxyFactory;
 import github.qiao712.rpc.registry.ServiceDiscovery;
@@ -25,7 +27,8 @@ public class TestNettyConsumer {
 
         ServiceDiscovery serviceDiscovery = new ZookeeperServiceDiscovery(new InetSocketAddress("8.141.151.176", 2181));
 
-        Invoker invoker = new DefaultInvoker(rpcClient, serviceDiscovery);
+        LoadBalance loadBalance = new RandomLoadBalance();
+        Invoker invoker = new DefaultInvoker(rpcClient, serviceDiscovery, loadBalance);
 
         RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory(invoker);
 
@@ -34,11 +37,11 @@ public class TestNettyConsumer {
 
         //创建一个桩对象进行调用
         TestService testService = rpcProxyFactory.createProxy(TestService.class);
-        System.out.println(testService.add(123, 123));
-        System.out.println(testService.add(123,123,123));
-        testService.delay(3000);
+//        System.out.println(testService.add(123, 123));
+//        System.out.println(testService.add(123,123,123));
+//        testService.delay(3000);
         System.out.println(testService.hello(new Hello(23, "hello")));
-        testService.testThrow();
+//        testService.testThrow();
 
 //        long n = 1000;
 //        long begin = System.nanoTime();

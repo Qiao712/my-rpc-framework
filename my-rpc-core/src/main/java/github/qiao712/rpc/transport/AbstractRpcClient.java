@@ -1,9 +1,5 @@
 package github.qiao712.rpc.transport;
 
-import github.qiao712.rpc.proto.RpcRequest;
-import github.qiao712.rpc.proto.RpcResponse;
-import github.qiao712.rpc.exception.RpcException;
-import github.qiao712.rpc.proto.RpcResponseCode;
 import github.qiao712.rpc.proto.SerializationType;
 import io.netty.util.internal.ObjectUtil;
 

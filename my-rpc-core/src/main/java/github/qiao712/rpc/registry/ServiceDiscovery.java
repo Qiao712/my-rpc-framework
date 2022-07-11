@@ -23,5 +23,5 @@ public interface ServiceDiscovery {
     /**
      * 获取服务实例列表(当前即为提供者地址列表)
      */
-    Set<InetSocketAddress> getServiceInstances(String serviceName);
+    List<InetSocketAddress> getServiceInstances(String serviceName);
 }
