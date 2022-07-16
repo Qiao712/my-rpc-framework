@@ -13,10 +13,8 @@ import org.apache.zookeeper.Watcher;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -27,7 +25,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
     private final CuratorFramework client;
 
     //服务名 - 服务实例信息(提供者地址...)列表 Map
-    private final ConcurrentMap<String, Set<InetSocketAddress>> providerMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, List<InetSocketAddress>> providerMap = new ConcurrentHashMap<>();
     //服务名 - 该服务的节点的Watcher
     private final ConcurrentMap<String, Watcher> watcherMap = new ConcurrentHashMap<>();
 
@@ -51,7 +49,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
         }
 
         //重新拉取服务列表
-        Set<InetSocketAddress> providerAddresses = fetchProviderAddresses(serviceName);
+        List<InetSocketAddress> providerAddresses = fetchProviderAddresses(serviceName);
         providerMap.put(serviceName, providerAddresses);
 
         //监听 /service-name/providers 节点及其子节点，改变时更新服务实例表
@@ -63,9 +61,15 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
                 if(event.getPath().startsWith(serviceProvidersNodePath)){
                     if(event.getType() == Event.EventType.NodeCreated){
                         log.debug("发现新的服务提供者: {}", event.getPath());
-                        providerMap.get(serviceName).add(getProviderAddress(event.getPath()));
+
+                        InetSocketAddress newProvider = getProviderAddress(event.getPath());
+                        List<InetSocketAddress> providers = providerMap.get(serviceName);
+                        if(providers.contains(newProvider)){
+                            providerMap.get(serviceName).add(newProvider);
+                        }
                     }else if(event.getType() == Event.EventType.NodeDeleted){
                         log.debug("服务提供者下线: {}", event.getPath());
+
                         providerMap.get(serviceName).remove(getProviderAddress(event.getPath()));
                     }else if(event.getType() == Event.EventType.NodeDataChanged){
                         log.debug("服务提供者数据改变: {}", event.getPath());
@@ -91,11 +95,11 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
 
     @Override
     public List<InetSocketAddress> getServiceInstances(String serviceName) {
-        Set<InetSocketAddress> providerAddress = providerMap.get(serviceName);
+        List<InetSocketAddress> providerAddress = providerMap.get(serviceName);
         if(providerAddress == null){
             throw new RpcException("未订阅服务(" + serviceName + ")");
         }
-        return new ArrayList<>(providerAddress);
+        return providerAddress;
     }
 
     @Override
@@ -106,17 +110,17 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
     /**
      * 拉取某服务的提供者列表
      */
-    private Set<InetSocketAddress> fetchProviderAddresses(String serviceName){
+    private List<InetSocketAddress> fetchProviderAddresses(String serviceName){
         try {
             log.debug("拉取服务{}的实例列表", serviceName);
 
             List<String> providers = client.getChildren().forPath(getServiceProvidersNodePath(serviceName));
-            return providers.stream().map(this::getProviderAddress).collect(Collectors.toSet());
+            return providers.stream().distinct().map(this::getProviderAddress).collect(Collectors.toList());
         } catch (Exception e) {
             log.error("获取服务提供者列表失败(service name = " + serviceName + ")", e);
         }
 
-        return Collections.emptySet();
+        return Collections.emptyList();
     }
 
     /**

@@ -33,12 +33,18 @@
 * 服务注册与发现:
   * 面向接口的服务注册(一个接口为一个**服务**)
   * 使用Zookeeper作为注册中心
+* 负载均衡
+  * 随机
+  * 轮询
+  * 一致性hash
 
 #### 包结构
 * github.qiao712.rpc
   * handler RequestHandler接口及其实现，处理请求调用目标方法
   * proto 定义通信协议
   * proxy 消费者一侧的代理相关
+  * invoker 整合服务发现、负载均衡、发起远程调用
+  * loadbalance 负载均衡策略
   * registry 服务注册与发现
   * serializer 序列化方式
   * transport 各种实现的客户端(消费者发起请求)和服务器(提供者接收处理请求)
@@ -52,7 +58,10 @@
   * util
   
 ### TODO:
+* 提取配置
 * 优雅停机
 * 服务提供者下线时，Zookeeper的临时节点删除延时较大; 无法删除服务节点
 * 心跳
-* 提取配置
+* 整合Spring
+* 容错
+* 处理请求的线程池
