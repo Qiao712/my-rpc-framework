@@ -37,13 +37,18 @@
   * 随机
   * 轮询
   * 一致性hash
+* 容错机制
+  * Failfast 调用一次，若失败直接抛出异常
+  * Failover 若调用失败，尝试其他服务提供者
+  * FailSafe 失败时不抛出异常，返回空对象
+  * Available 不进行负载均衡，遍历整个列表，直到调用成功
 
 #### 包结构
 * github.qiao712.rpc
   * handler RequestHandler接口及其实现，处理请求调用目标方法
   * proto 定义通信协议
   * proxy 消费者一侧的代理相关
-  * invoker 整合服务发现、负载均衡、发起远程调用
+  * cluster 抽象一个集群，提供容错功能，整合服务发现、负载均衡、发起远程调用
   * loadbalance 负载均衡策略
   * registry 服务注册与发现
   * serializer 序列化方式
@@ -63,5 +68,5 @@
 * 服务提供者下线时，Zookeeper的临时节点删除延时较大; 无法删除服务节点
 * 心跳
 * 整合Spring
-* 容错
+* 容错机制: Failback, Forking, Broadcast 
 * 处理请求的线程池

@@ -1,16 +1,15 @@
 package github.qiao712;
 
-import github.qiao712.rpc.invoker.DefaultInvoker;
-import github.qiao712.rpc.invoker.Invoker;
+import github.qiao712.rpc.cluster.Cluster;
+import github.qiao712.rpc.cluster.FailfastCluster;
 import github.qiao712.rpc.loadbalance.ConsistentHashLoadBalance;
-import github.qiao712.rpc.loadbalance.LoadBalance;
+import github.qiao712.rpc.proto.SerializationType;
+import github.qiao712.rpc.proxy.JDKRpcProxyFactory;
+import github.qiao712.rpc.proxy.RpcProxyFactory;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.registry.zookeeper.ZookeeperServiceDiscovery;
-import github.qiao712.rpc.transport.bio.client.BIORpcClient;
-import github.qiao712.rpc.proxy.JDKRpcProxyFactory;
 import github.qiao712.rpc.transport.RpcClient;
-import github.qiao712.rpc.proxy.RpcProxyFactory;
-import github.qiao712.rpc.proto.SerializationType;
+import github.qiao712.rpc.transport.bio.client.BIORpcClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qiao712.domain.Hello;
@@ -27,11 +26,11 @@ public class TestBIOConsumer {
 
         ServiceDiscovery serviceDiscovery = new ZookeeperServiceDiscovery(new InetSocketAddress("8.141.151.176", 9712));
 
-        Invoker invoker = new DefaultInvoker(rpcClient, serviceDiscovery, new ConsistentHashLoadBalance());
+        Cluster cluster = new FailfastCluster(rpcClient, serviceDiscovery, new ConsistentHashLoadBalance());
 
-        RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory(invoker);
+        RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory();
 
-        TestService testService = rpcProxyFactory.createProxy(TestService.class);
+        TestService testService = rpcProxyFactory.createProxy(TestService.class, TestService.class.getCanonicalName(), cluster);
 
         System.out.println(testService.add(123, 123));
         System.out.println(testService.add(123,123,123));

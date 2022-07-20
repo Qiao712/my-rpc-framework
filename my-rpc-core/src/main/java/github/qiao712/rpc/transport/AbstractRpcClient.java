@@ -1,7 +1,6 @@
 package github.qiao712.rpc.transport;
 
 import github.qiao712.rpc.proto.SerializationType;
-import io.netty.util.internal.ObjectUtil;
 
 public abstract class AbstractRpcClient implements RpcClient {
     protected SerializationType serializationType = SerializationType.JDK_SERIALIZATION;        //所使用的序列化方式
@@ -24,7 +23,9 @@ public abstract class AbstractRpcClient implements RpcClient {
 
     @Override
     public void setResponseTimeout(long responseTimeout) {
-        ObjectUtil.checkPositiveOrZero(responseTimeout, "响应等待超时时间");
+        if(responseTimeout < 0){
+            throw new IllegalArgumentException("responseTimeout小于0");
+        }
         this.responseTimeout = responseTimeout;
     }
 }

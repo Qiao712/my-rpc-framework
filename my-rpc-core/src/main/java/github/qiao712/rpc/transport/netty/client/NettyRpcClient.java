@@ -2,10 +2,7 @@ package github.qiao712.rpc.transport.netty.client;
 
 import github.qiao712.rpc.exception.RpcException;
 import github.qiao712.rpc.loadbalance.LoadBalance;
-import github.qiao712.rpc.proto.Message;
-import github.qiao712.rpc.proto.MessageType;
-import github.qiao712.rpc.proto.RpcRequest;
-import github.qiao712.rpc.proto.RpcResponse;
+import github.qiao712.rpc.proto.*;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.transport.AbstractRpcClient;
 import github.qiao712.rpc.util.AutoIncrementIdGenerator;
@@ -40,6 +37,7 @@ public class NettyRpcClient extends AbstractRpcClient {
         requestMessage.setPayload(rpcRequest);
         requestMessage.setRequestId(idGenerator.generateId());
 
+        //发送请求
         ChannelFuture channelFuture = channel.writeAndFlush(requestMessage);
         try {
             channelFuture.sync();
@@ -47,15 +45,17 @@ public class NettyRpcClient extends AbstractRpcClient {
             throw new RpcException("请求发送失败", e);
         }
 
-        //在与该request id关联的CompletableFuture上等待请求
+        //在与该request id关联的CompletableFuture上等待响应
         CompletableFuture<RpcResponse> responseFuture = waitingRequestPool.waitResponse(requestMessage.getRequestId());
         try {
             return responseTimeout > 0 ? responseFuture.get(responseTimeout, TimeUnit.MILLISECONDS) : responseFuture.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RpcException("响应获取失败", e);
+        } catch (InterruptedException e) {
+            throw new RpcException("请求被中断", e);
         } catch (TimeoutException e) {
             waitingRequestPool.abandonRequest(requestMessage.getRequestId());
             throw new RpcException("响应超时", e);
+        } catch (ExecutionException e) {
+            throw new RpcException("响应获取失败", e.getCause());
         }
     }
 
