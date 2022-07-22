@@ -12,7 +12,7 @@
         <module>test-consumer</module>
         <module>test-provider</module>
         <module>test-common</module>
-        <module>my-rpc-core</module>
+        <module>my-rpc-framework-core</module>
     </modules>
 
     <properties>
@@ -32,29 +32,6 @@
             <artifactId>junit</artifactId>
             <version>4.13.1</version>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>1.2.75</version>
-        </dependency>
-
-        <!--slf4j + log4j-->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.35</version>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.5</version>
         </dependency>
     </dependencies>
 </project>
