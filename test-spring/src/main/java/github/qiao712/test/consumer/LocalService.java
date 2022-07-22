@@ -9,9 +9,14 @@ public class LocalService {
     @RpcServiceReference
     private TestService testService;
 
+    @RpcServiceReference
+    private LocalService2 testService2;
+
     public void testRpc(){
-        System.out.println(testService);
-        System.out.println(testService.add(712, 712));
-        testService.hello();
+//        System.out.println(testService);
+//        System.out.println(testService.add(712, 712));
+//        testService.hello();
+
+        System.out.println(testService2);
     }
 }

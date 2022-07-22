@@ -58,7 +58,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
             //在表示服务提供者的节点改变时，更新提供者地址列表
             @Override
             public void process(WatchedEvent event) {
-                if(event.getPath().startsWith(serviceProvidersNodePath)){
+                if(event.getPath() != null && event.getPath().startsWith(serviceProvidersNodePath)){
                     if(event.getType() == Event.EventType.NodeCreated){
                         log.debug("发现新的服务提供者: {}", event.getPath());
 
