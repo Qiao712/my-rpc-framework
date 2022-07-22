@@ -8,6 +8,7 @@ import github.qiao712.rpc.transport.AbstractRpcClient;
 import github.qiao712.rpc.util.AutoIncrementIdGenerator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import sun.nio.ch.Net;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
@@ -16,15 +17,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class NettyRpcClient extends AbstractRpcClient {
-    private String host;
-    private int port;
     private final WaitingRequestPool waitingRequestPool = new WaitingRequestPool();
     private final AutoIncrementIdGenerator idGenerator = new AutoIncrementIdGenerator();
     private final ClientChannelPool clientChannelPool = new ClientChannelPool(this);
 
-    public NettyRpcClient(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public NettyRpcClient(){
     }
 
     @Override

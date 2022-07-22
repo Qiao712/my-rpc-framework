@@ -20,17 +20,21 @@ public class TestNettyProvider {
         InetSocketAddress providerAddress = new InetSocketAddress("127.0.0.1", port);
         InetSocketAddress zkAddress = new InetSocketAddress("8.141.151.176", 2181);
 
+        //服务注册组件
         ServiceRegistry serviceRegistry = new ZookeeperServiceRegistry(providerAddress, zkAddress);
 
+        //服务的容器，用于注册服务对象并通过服务注册组件注册
         ServiceProvider serviceProvider = new ServiceProvider(serviceRegistry);
 
+        //RpcRequest处理器
         RequestHandler requestHandler = new SimpleRequestHandler(serviceProvider);
 
+        //注册服务
         serviceProvider.addService(new TestServiceImpl());
 
+        //创建RpcServer，接收并处理Rpc调用请求
         RpcServer rpcServer = new NettyRpcServer(port, requestHandler);
         rpcServer.setMaxIdleTime(3000);
-
         rpcServer.start();
     }
 }

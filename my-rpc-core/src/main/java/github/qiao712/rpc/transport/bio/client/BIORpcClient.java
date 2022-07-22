@@ -20,23 +20,21 @@ import java.net.Socket;
 @Slf4j
 public class BIORpcClient extends AbstractRpcClient {
     private final RpcMessageCodec rpcMessageCodec = new RpcMessageCodec();
-    private final InetSocketAddress serverAddress;
 
-    public BIORpcClient(String host, int port) {
-        this.serverAddress = new InetSocketAddress(host, port);
+    public BIORpcClient(){
     }
 
     @Override
     public RpcResponse request(InetSocketAddress providerAddress, RpcRequest rpcRequest) {
         try(Socket socket = new Socket()){
-            socket.connect(serverAddress);
+            socket.connect(providerAddress);
 
             try(BufferedOutputStream outputStream = new BufferedOutputStream(socket.getOutputStream());
                 BufferedInputStream inputStream = new BufferedInputStream(socket.getInputStream())){
                 //发送请求
                 Message<RpcRequest> requestMessage = new Message<>();
                 requestMessage.setMessageType(MessageType.REQUEST);
-//                requestMessage.setRequestId(0);   request id 对一个连接处理一个请求的实现无意义
+                //requestMessage.setRequestId(0);   request id 对一个连接处理一个请求的实现无意义
                 requestMessage.setSerializationType(serializationType);
                 requestMessage.setPayload(rpcRequest);
                 rpcMessageCodec.encodeMessage(requestMessage, outputStream);
@@ -54,7 +52,7 @@ public class BIORpcClient extends AbstractRpcClient {
                 throw new RpcException("请求失败", e);
             }
         } catch (IOException e) {
-            log.debug("无法连接至{}", serverAddress);
+            log.debug("无法连接至{}", providerAddress);
             throw new RpcException("无法连接至服务提供者", e);
         }
     }

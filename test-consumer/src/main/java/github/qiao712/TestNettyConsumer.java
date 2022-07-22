@@ -5,6 +5,7 @@ import github.qiao712.rpc.cluster.FailfastCluster;
 import github.qiao712.rpc.cluster.FailoverCluster;
 import github.qiao712.rpc.cluster.FailsafeCluster;
 import github.qiao712.rpc.loadbalance.ConsistentHashLoadBalance;
+import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proto.SerializationType;
 import github.qiao712.rpc.proxy.JDKRpcProxyFactory;
 import github.qiao712.rpc.proxy.RpcProxyFactory;
@@ -22,25 +23,29 @@ import java.net.InetSocketAddress;
 @Slf4j
 public class TestNettyConsumer {
     public static void main(String[] args) {
-        RpcClient rpcClient = new NettyRpcClient("127.0.0.1", 10056);
+        //创建客户端并进行设置
+        RpcClient rpcClient = new NettyRpcClient();
         rpcClient.setSerializationType(SerializationType.HESSIAN_SERIALIZATION);
         rpcClient.setResponseTimeout(1000L);
 
+        //服务发现组件
         ServiceDiscovery serviceDiscovery = new ZookeeperServiceDiscovery(new InetSocketAddress("8.141.151.176", 2181));
 
-//        Cluster cluster = new FailfastCluster(rpcClient, serviceDiscovery, new ConsistentHashLoadBalance());
-//        FailoverCluster cluster = new FailoverCluster(rpcClient, serviceDiscovery, new ConsistentHashLoadBalance());
-//        cluster.setRetries(10);
-//        Cluster cluster = new FailsafeCluster(rpcClient, serviceDiscovery, new ConsistentHashLoadBalance());
-        Cluster cluster = new FailfastCluster(rpcClient, serviceDiscovery, new ConsistentHashLoadBalance());
+        //选择负载均衡策略
+        LoadBalance loadBalance = new ConsistentHashLoadBalance();
 
-        RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory();
+        //创建Cluster，整合RpcClient, ServiceDiscovery, LoadBalance
+        FailoverCluster cluster = new FailoverCluster(rpcClient, serviceDiscovery, loadBalance);
+        cluster.setRetries(10);
 
         //订阅服务
         serviceDiscovery.subscribeService(TestService.class.getCanonicalName());
 
         //创建一个桩对象进行调用
+        RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory();
         TestService testService = rpcProxyFactory.createProxy(TestService.class, TestService.class.getCanonicalName(), cluster);
+
+        //调用测试
 //        System.out.println(testService.add(123, 123));
 //        System.out.println(testService.add(123,123,123));
         testService.delay(5000);

@@ -21,7 +21,7 @@ public class TestBIOConsumer {
     private static final Logger log = LoggerFactory.getLogger(TestBIOConsumer.class);
 
     public static void main(String[] args) {
-        RpcClient rpcClient = new BIORpcClient("127.0.0.1", 9712);
+        RpcClient rpcClient = new BIORpcClient();
         rpcClient.setSerializationType(SerializationType.HESSIAN_SERIALIZATION);
 
         ServiceDiscovery serviceDiscovery = new ZookeeperServiceDiscovery(new InetSocketAddress("8.141.151.176", 9712));
