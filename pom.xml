@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
-    <artifactId>my-rpc</artifactId>
+    <groupId>github.qiao712</groupId>
+    <artifactId>my-rpc-framework</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
@@ -13,6 +13,8 @@
         <module>test-provider</module>
         <module>test-common</module>
         <module>my-rpc-framework-core</module>
+        <module>my-rpc-framework-spring</module>
+        <module>test-spring</module>
     </modules>
 
     <properties>

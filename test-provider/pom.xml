@@ -3,13 +3,13 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>my-rpc</artifactId>
-        <groupId>org.example</groupId>
+        <groupId>github.qiao712</groupId>
+        <artifactId>my-rpc-framework</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>test-server</artifactId>
+    <artifactId>test-provider</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -18,14 +18,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.example</groupId>
+            <groupId>github.qiao712</groupId>
             <artifactId>test-common</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
-            <groupId>org.example</groupId>
-            <artifactId>my-rpc-core</artifactId>
+            <groupId>github.qiao712</groupId>
+            <artifactId>my-rpc-framework-core</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
