@@ -1,6 +1,6 @@
 package github.qiao712.test.consumer;
 
-import github.qiao712.processor.RpcServiceBeanPostProcessor;
+import github.qiao712.processor.RpcServiceReferenceProcessor;
 import github.qiao712.rpc.proto.SerializationType;
 import github.qiao712.rpc.proxy.JDKRpcProxyFactory;
 import github.qiao712.rpc.proxy.RpcProxyFactory;
@@ -45,7 +45,7 @@ public class ConsumerApplication {
     }
 
     @Bean
-    public RpcServiceBeanPostProcessor rpcServiceBeanPostProcessor(){
-        return new RpcServiceBeanPostProcessor();
+    public RpcServiceReferenceProcessor rpcServiceBeanPostProcessor(){
+        return new RpcServiceReferenceProcessor();
     }
 }

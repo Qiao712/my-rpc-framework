@@ -2,6 +2,9 @@ package github.qiao712.annotation;
 
 import java.lang.annotation.*;
 
+/**
+ * 引用服务
+ */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})

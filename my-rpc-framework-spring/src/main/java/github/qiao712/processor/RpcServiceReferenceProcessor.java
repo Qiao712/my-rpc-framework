@@ -4,6 +4,7 @@ import github.qiao712.annotation.RpcServiceReference;
 import github.qiao712.factory.ClusterFactory;
 import github.qiao712.factory.LoadBalanceFactory;
 import github.qiao712.rpc.cluster.Cluster;
+import github.qiao712.rpc.cluster.FailoverCluster;
 import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proxy.RpcProxyFactory;
 import github.qiao712.rpc.registry.ServiceDiscovery;
@@ -11,19 +12,16 @@ import github.qiao712.rpc.transport.RpcClient;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
-import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
 
-@Component
-public class RpcServiceBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
+public class RpcServiceReferenceProcessor implements InstantiationAwareBeanPostProcessor {
     @Autowired
     private RpcProxyFactory rpcProxyFactory;
     @Autowired
     private RpcClient rpcClient;
     @Autowired
     private ServiceDiscovery serviceDiscovery;
-
 
 
     /**
@@ -45,6 +43,10 @@ public class RpcServiceBeanPostProcessor implements InstantiationAwareBeanPostPr
 
                 //创建Cluster
                 Cluster cluster = ClusterFactory.createCluster(serviceReference.cluster(), rpcClient, serviceDiscovery, loadBalance);
+                if(cluster instanceof FailoverCluster){
+                    //设置重试次数
+                    ((FailoverCluster) cluster).setRetries(serviceReference.retries());
+                }
 
                 //订阅服务
                 serviceDiscovery.subscribeService(field.getType().getCanonicalName());
