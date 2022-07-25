@@ -28,11 +28,8 @@ public class FailoverCluster extends AbstractCluster{
         }
 
         RpcException lastException = null;
-        for(int i = 0; i < retries; i++){
-            if(serviceInstances.isEmpty()){
-                throw new RpcException("请求失败: 无可用服务提供者. 已尝试" + i + "次");
-            }
-
+        int i;
+        for(i = 0; i < retries && !serviceInstances.isEmpty(); i++){
             InetSocketAddress selected = loadBalance.select(serviceInstances, rpcRequest);
 
             try{
@@ -43,7 +40,7 @@ public class FailoverCluster extends AbstractCluster{
             }
         }
 
-        throw lastException;
+        throw new RpcException("请求失败. 已尝试" + i + "次. 最后一次尝试失败原因:" + lastException, lastException);
     }
 
     public int getRetries() {
