@@ -7,6 +7,7 @@ import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.transport.RpcClient;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,15 +28,26 @@ public class FailoverCluster extends AbstractCluster{
             throw new RpcException("请求失败: 无可用服务提供者.");
         }
 
+        List<InetSocketAddress> serviceInstancesCopy = serviceInstances;
         RpcException lastException = null;
         int i;
         for(i = 0; i < retries && !serviceInstances.isEmpty(); i++){
-            InetSocketAddress selected = loadBalance.select(serviceInstances, rpcRequest);
+            InetSocketAddress selected = loadBalance.select(serviceInstancesCopy, rpcRequest);
 
             try{
                 return doRequest(selected, rpcRequest).getData();
             }catch (RpcException e){
-                serviceInstances.remove(selected);
+                if(serviceInstances.size() < 2) continue;   //不到两个可用的节点就不删了
+                //移除失败的节点
+                if(serviceInstancesCopy == serviceInstances){ //修改前先复制
+                    serviceInstancesCopy = new ArrayList<>(serviceInstances);
+                }
+
+                serviceInstancesCopy.remove(selected);
+
+                if(serviceInstancesCopy.isEmpty()){
+                    serviceInstancesCopy = new ArrayList<>(serviceInstances);
+                }
                 lastException = e;
             }
         }
