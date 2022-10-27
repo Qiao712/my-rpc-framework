@@ -34,17 +34,12 @@ public class NettyRpcClient extends AbstractRpcClient {
         requestMessage.setPayload(rpcRequest);
         requestMessage.setRequestId(idGenerator.generateId());
 
-        //发送请求
-        ChannelFuture channelFuture = channel.writeAndFlush(requestMessage);
-        try {
-            channelFuture.sync();
-        } catch (InterruptedException e) {
-            throw new RpcException("请求发送失败", e);
-        }
-
-        //在与该request id关联的CompletableFuture上等待响应
+        //在与该request id关联的CompletableFuture上等待响应 (先加入等待池中，防止响应太快，导致还没执行该句就收到了响应)
         CompletableFuture<RpcResponse> responseFuture = waitingRequestPool.waitResponse(requestMessage.getRequestId());
+
+        //发送并等待响应
         try {
+            channel.writeAndFlush(requestMessage);
             return responseTimeout > 0 ? responseFuture.get(responseTimeout, TimeUnit.MILLISECONDS) : responseFuture.get();
         } catch (InterruptedException e) {
             throw new RpcException("请求被中断", e);
