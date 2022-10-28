@@ -11,7 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * 同步地处理请求
+ * 直接在读写线程中处理请求
  * 无处理业务的线程池
  */
 @Slf4j
@@ -23,12 +23,13 @@ public class SimpleRequestHandler implements RequestHandler {
     }
 
     @Override
-    public RpcResponse handleRequest(RpcRequest request) {
+    public void handleRequest(RpcRequest request, ResponseSender responseSender) {
         Object service = serviceProvider.getService(request.getServiceName());
 
         if(service == null){
             log.debug("未找到服务:{}", request.getServiceName());
-            return RpcResponse.fail(RpcResponseCode.SERVICE_NOT_FOUND);
+            responseSender.send(RpcResponse.fail(RpcResponseCode.SERVICE_NOT_FOUND));
+            return;
         }
 
         //获取方法
@@ -59,6 +60,6 @@ public class SimpleRequestHandler implements RequestHandler {
             response = RpcResponse.fail(e.getCause());
         }
 
-        return response;
+        responseSender.send(response);
     }
 }

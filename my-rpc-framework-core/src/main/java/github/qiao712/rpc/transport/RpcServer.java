@@ -1,6 +1,7 @@
 package github.qiao712.rpc.transport;
 
 import github.qiao712.rpc.handler.RequestHandler;
+import github.qiao712.rpc.proto.RpcResponse;
 import github.qiao712.rpc.proto.SerializationType;
 
 public interface RpcServer {

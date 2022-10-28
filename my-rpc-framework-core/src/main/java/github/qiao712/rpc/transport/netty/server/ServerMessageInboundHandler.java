@@ -2,6 +2,7 @@ package github.qiao712.rpc.transport.netty.server;
 
 
 import github.qiao712.rpc.handler.RequestHandler;
+import github.qiao712.rpc.handler.ResponseSender;
 import github.qiao712.rpc.proto.*;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -24,18 +25,22 @@ public class ServerMessageInboundHandler extends SimpleChannelInboundHandler<Mes
         if(message.getMessageType() == MessageType.REQUEST){
             log.debug("请求: {}", message.getPayload());
 
-            //处理请求
-            RpcResponse rpcResponse = requestHandler.handleRequest((RpcRequest) message.getPayload());
+            //用于发送请求的回调
+            ResponseSender responseSender = new ResponseSender() {
+                @Override
+                public void send(RpcResponse rpcResponse) {
+                    //返回请求
+                    Message<RpcResponse> responseMessage = new Message<>();
+                    responseMessage.setMessageType(MessageType.RESPONSE);
+                    responseMessage.setRequestId(message.getRequestId());
+                    responseMessage.setSerializationType(serializationType);
+                    responseMessage.setPayload(rpcResponse);
+                    ctx.writeAndFlush(responseMessage);
+                    log.debug("响应: {}", rpcResponse);
+                }
+            };
 
-            //返回请求
-            Message<RpcResponse> responseMessage = new Message<>();
-            responseMessage.setMessageType(MessageType.RESPONSE);
-            responseMessage.setRequestId(message.getRequestId());
-            responseMessage.setSerializationType(serializationType);
-            responseMessage.setPayload(rpcResponse);
-            ctx.writeAndFlush(responseMessage);
-
-            log.debug("响应: {}", rpcResponse);
+            requestHandler.handleRequest((RpcRequest) message.getPayload(), responseSender);
         }else{
             log.error("消费者接收到不支持的类型的消息(MessageType = {})", message.getMessageType());
         }

@@ -2,6 +2,7 @@ package github.qiao712.rpc.transport.bio.server;
 
 import github.qiao712.rpc.exception.RpcException;
 import github.qiao712.rpc.handler.RequestHandler;
+import github.qiao712.rpc.handler.ResponseSender;
 import github.qiao712.rpc.proto.*;
 import github.qiao712.rpc.transport.AbstractRpcServer;
 import github.qiao712.rpc.transport.RpcServer;
@@ -49,16 +50,21 @@ public class BIORpcServer extends AbstractRpcServer {
                     throw new RpcException("非法请求");
                 }
 
-                //处理请求
-                RpcResponse rpcResponse = requestHandler.handleRequest(rpcRequest);
+                //用于发送请求的回调
+                ResponseSender responseSender = new ResponseSender() {
+                    @Override
+                    public void send(RpcResponse rpcResponse) {
+                        //返回
+                        Message<RpcResponse> responseMessage = new Message<>();
+                        responseMessage.setMessageType(MessageType.RESPONSE);
+                        responseMessage.setSerializationType(serializationType);
+                        responseMessage.setRequestId(requestMessage.getRequestId());    //消费者的实现可能是需要request id的实现(Netty)
+                        responseMessage.setPayload(rpcResponse);
+                        rpcMessageCodec.encodeMessage(responseMessage, outputStream);
+                    }
+                };
 
-                //返回
-                Message<RpcResponse> responseMessage = new Message<>();
-                responseMessage.setMessageType(MessageType.RESPONSE);
-                responseMessage.setSerializationType(serializationType);
-                responseMessage.setRequestId(requestMessage.getRequestId());    //消费者的实现可能是需要request id的实现(Netty)
-                responseMessage.setPayload(rpcResponse);
-                rpcMessageCodec.encodeMessage(responseMessage, outputStream);
+                requestHandler.handleRequest(rpcRequest, responseSender);
             } catch (IOException e) {
                 log.error("Socket I/O 异常", e);
             } finally {

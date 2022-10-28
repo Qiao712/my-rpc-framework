@@ -28,8 +28,8 @@
 
   * 超时:
     * 客户端: 请求发出后，响应的超时(NettyRpcClient中实现, BIORpcClient未实现)
-* 代理:
-  * JDK代理
+* 消费者一侧的桩对象:
+  * JDK动态代理实现
 * 服务注册与发现:
   * 面向接口的服务注册(一个接口为一个**服务**)
   * 使用Zookeeper作为注册中心
@@ -42,6 +42,9 @@
   * Failover 若调用失败，尝试其他服务提供者
   * FailSafe 失败时不抛出异常，返回空对象
   * Available 不进行负载均衡，遍历整个列表，直到调用成功
+
+#### 整体流程  
+![整体流程](./asset/my-rpc-framework.png)
 
 #### 包结构
 * github.qiao712.rpc
@@ -63,10 +66,12 @@
   * util
   
 ### TODO:
-* 提取配置
+* 配置
 * 优雅停机
 * 服务提供者下线时，Zookeeper的临时节点删除延时较大; 无法删除服务节点
 * 心跳
 * 整合Spring
+* 实现Spring-starter支持自动配置
 * 容错机制: Failback, Forking, Broadcast 
 * 处理请求的线程池
+* 各种组件的配置

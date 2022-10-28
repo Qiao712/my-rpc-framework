@@ -7,5 +7,5 @@ import github.qiao712.rpc.proto.RpcResponse;
  * 服务端处理响应
  */
 public interface RequestHandler{
-    RpcResponse handleRequest(RpcRequest request);
+    void handleRequest(RpcRequest request, ResponseSender responseSender);
 }

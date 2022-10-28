@@ -28,6 +28,18 @@
             <artifactId>my-rpc-framework-core</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+
+        <!--日志实现-->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.5</version>
+        </dependency>
     </dependencies>
 
 </project>
