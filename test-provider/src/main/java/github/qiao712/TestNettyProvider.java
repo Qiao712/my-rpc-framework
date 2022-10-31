@@ -32,20 +32,21 @@ public class TestNettyProvider {
         ServiceProvider serviceProvider = new ServiceProvider(serviceRegistry);
 
         //RpcRequest处理器
-//        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
-//                Runtime.getRuntime().availableProcessors() * 2,
-//                10, TimeUnit.SECONDS,
-//                new ArrayBlockingQueue<>(1000),
-//                new ThreadPoolExecutor.CallerRunsPolicy());
-//        RequestHandler requestHandler = new ConcurrentRequestHandler(serviceProvider, threadPoolExecutor);
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
+                Runtime.getRuntime().availableProcessors() * 2,
+                10, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(1000),
+                new ThreadPoolExecutor.CallerRunsPolicy());
+        RequestHandler requestHandler = new ConcurrentRequestHandler(serviceProvider, threadPoolExecutor);
 //        RequestHandler requestHandler = new SimpleRequestHandler(serviceProvider);
-        RequestHandler requestHandler = new SerializableRequestHandler(serviceProvider);
+//        RequestHandler requestHandler = new SerializableRequestHandler(serviceProvider);
 
         //注册服务
         serviceProvider.addService(new TestServiceImpl());
 
         //创建RpcServer，接收并处理Rpc调用请求
         RpcServer rpcServer = new NettyRpcServer(port, requestHandler);
+//        rpcServer.setSerializationType();
         rpcServer.setMaxIdleTime(3000);
         rpcServer.start();
     }
