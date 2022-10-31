@@ -15,6 +15,7 @@ import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -115,7 +116,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
             log.debug("拉取服务{}的实例列表", serviceName);
 
             List<String> providers = client.getChildren().forPath(getServiceProvidersNodePath(serviceName));
-            return providers.stream().distinct().map(this::getProviderAddress).collect(Collectors.toList());
+            return providers.stream().distinct().map(this::getProviderAddress).filter(Objects::nonNull).collect(Collectors.toList());
         } catch (Exception e) {
             log.error("获取服务提供者列表失败(service name = " + serviceName + ")", e);
         }
