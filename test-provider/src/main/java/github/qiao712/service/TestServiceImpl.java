@@ -3,8 +3,6 @@ package github.qiao712.service;
 import qiao712.domain.Hello;
 import qiao712.service.TestService;
 
-import java.util.concurrent.TimeUnit;
-
 public class TestServiceImpl implements TestService {
 
     @Override
@@ -15,6 +13,11 @@ public class TestServiceImpl implements TestService {
     @Override
     public Integer add(Integer a, Integer b, Integer c) {
         return a + b + c;
+    }
+
+    @Override
+    public int add2(int a, int b) {
+        return a + b;
     }
 
     @Override

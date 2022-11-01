@@ -22,15 +22,17 @@ import javax.annotation.Resource;
 import java.net.InetSocketAddress;
 import java.util.concurrent.*;
 
+/**
+ * 服务端相关组件注册
+ */
 @Configuration
 @EnableConfigurationProperties(MyRPCProperties.class)   //注册储存配置值的Bean
-public class MyRPCAutoConfiguration {
-    private static final Logger logger = LoggerFactory.getLogger(MyRPCAutoConfiguration.class);
+public class MyRPCServerAutoConfiguration {
+    private static final Logger logger = LoggerFactory.getLogger(MyRPCClientAutoConfiguration.class);
 
     @Resource
     MyRPCProperties properties;
 
-    //服务提供者相关组件注册--------------------------------------------------
     /**
      * 服务注册组件
      */
@@ -118,7 +120,4 @@ public class MyRPCAutoConfiguration {
         rpcServer.start();
         return rpcServer;
     }
-
-    //服务消费者相关组件注册--------------------------------------------------
-
 }

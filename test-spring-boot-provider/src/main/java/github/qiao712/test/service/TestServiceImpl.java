@@ -18,6 +18,11 @@ public class TestServiceImpl implements TestService {
     }
 
     @Override
+    public int add2(int a, int b) {
+        return a + b;
+    }
+
+    @Override
     public Hello hello(Hello hi) {
         System.out.println(hi);
         Hello hi2 = new Hello();

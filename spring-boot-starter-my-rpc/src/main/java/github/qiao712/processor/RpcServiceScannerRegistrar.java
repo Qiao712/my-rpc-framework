@@ -1,6 +1,6 @@
 package github.qiao712.processor;
 
-import github.qiao712.annotation.EnableRpcServiceScan;
+import github.qiao712.annotation.EnableRpcServer;
 import github.qiao712.annotation.RpcService;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
@@ -16,7 +16,7 @@ public class RpcServiceScannerRegistrar implements ImportBeanDefinitionRegistrar
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
         //获取导入该类的类的注解信息
-        AnnotationAttributes annotationAttributes = AnnotationAttributes.fromMap(importingClassMetadata.getAnnotationAttributes(EnableRpcServiceScan.class.getName()));
+        AnnotationAttributes annotationAttributes = AnnotationAttributes.fromMap(importingClassMetadata.getAnnotationAttributes(EnableRpcServer.class.getName()));
 
         //要扫描的包
         String[] basePackages = new String[0];

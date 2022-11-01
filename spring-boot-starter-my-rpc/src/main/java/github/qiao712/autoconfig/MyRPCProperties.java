@@ -34,6 +34,10 @@ public class MyRPCProperties {
     /**
      * 消费者相关配置
      */
+    //全局的调用超时时间
+    private long responseTimeout = -1;
+    //创建代理对象的方式
+    private String proxyFactory = "github.qiao712.rpc.proxy.JDKRpcProxyFactory";
 
     public String getHost() {
         return host;
@@ -121,5 +125,21 @@ public class MyRPCProperties {
 
     public void setThreadKeepaliveTime(int threadKeepaliveTime) {
         this.threadKeepaliveTime = threadKeepaliveTime;
+    }
+
+    public long getResponseTimeout() {
+        return responseTimeout;
+    }
+
+    public void setResponseTimeout(long responseTimeout) {
+        this.responseTimeout = responseTimeout;
+    }
+
+    public String getProxyFactory() {
+        return proxyFactory;
+    }
+
+    public void setProxyFactory(String proxyFactory) {
+        this.proxyFactory = proxyFactory;
     }
 }

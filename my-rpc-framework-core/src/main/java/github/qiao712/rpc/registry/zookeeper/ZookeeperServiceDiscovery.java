@@ -31,9 +31,13 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
     private final ConcurrentMap<String, Watcher> watcherMap = new ConcurrentHashMap<>();
 
     public ZookeeperServiceDiscovery(InetSocketAddress... zookeeperAddresses) {
+        this(CuratorUtils.getAddressString(zookeeperAddresses));
+    }
+
+    public ZookeeperServiceDiscovery(String connectString){
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 5);
         this.client = CuratorFrameworkFactory.builder()
-                .connectString(CuratorUtils.getAddressString(zookeeperAddresses))
+                .connectString(connectString)
                 .retryPolicy(retryPolicy)
                 .namespace(NAME_SPACE)
                 .build();

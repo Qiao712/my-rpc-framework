@@ -1,2 +1,2 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-github.qiao712.autoconfig.MyRPCAutoConfiguration
+#org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+#github.qiao712.autoconfig.MyRPCClientAutoConfiguration

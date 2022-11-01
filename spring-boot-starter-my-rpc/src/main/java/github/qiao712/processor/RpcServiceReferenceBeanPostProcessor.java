@@ -10,7 +10,6 @@ import github.qiao712.rpc.proxy.RpcProxyFactory;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.transport.RpcClient;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
 
 import java.lang.reflect.Field;

@@ -26,10 +26,6 @@ public class ZookeeperServiceRegistry implements ServiceRegistry, Closeable {
         this(providerAddress, CuratorUtils.getAddressString(zookeeperAddresses));
     }
 
-    public ZookeeperServiceRegistry(InetSocketAddress providerAddress, String... zookeeperAddresses){
-        this(providerAddress, CuratorUtils.getAddressString(zookeeperAddresses));
-    }
-
     public ZookeeperServiceRegistry(InetSocketAddress providerAddress, String connectString){
         this.providerAddress = providerAddress;
 

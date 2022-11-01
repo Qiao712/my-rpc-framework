@@ -15,6 +15,7 @@
         <module>my-rpc-framework-core</module>
         <module>spring-boot-starter-my-rpc</module>
         <module>test-spring-boot-provider</module>
+        <module>test-spring-boot-consumer</module>
     </modules>
 
     <properties>
