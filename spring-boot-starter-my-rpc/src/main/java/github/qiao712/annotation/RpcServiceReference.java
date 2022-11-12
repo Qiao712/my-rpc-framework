@@ -14,5 +14,9 @@ public @interface RpcServiceReference {
 
     String cluster() default "failover";
 
+    //容错策略为Failover时的重试次数
     int retries() default 10;
+
+    //容错策略为Forking同时请求的提供者的数量
+    int forks() default 10;
 }

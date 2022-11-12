@@ -5,6 +5,7 @@ import github.qiao712.factory.ClusterFactory;
 import github.qiao712.factory.LoadBalanceFactory;
 import github.qiao712.rpc.cluster.Cluster;
 import github.qiao712.rpc.cluster.FailoverCluster;
+import github.qiao712.rpc.cluster.ForkingCluster;
 import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proxy.RpcProxyFactory;
 import github.qiao712.rpc.registry.ServiceDiscovery;
@@ -47,6 +48,9 @@ public class RpcServiceReferenceBeanPostProcessor implements InstantiationAwareB
                 if(cluster instanceof FailoverCluster){
                     //设置重试次数
                     ((FailoverCluster) cluster).setRetries(serviceReference.retries());
+                }else if(cluster instanceof ForkingCluster){
+                    //设置同时请求的提供者的数量
+                    ((ForkingCluster) cluster).setForks(serviceReference.forks());
                 }
 
                 //订阅服务

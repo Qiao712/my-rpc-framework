@@ -12,6 +12,8 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public class TestSomething {
     @Test
@@ -163,5 +165,13 @@ public class TestSomething {
                 System.out.println("!!!!!!");
             }
         }
+    }
+
+    @Test
+    public void testCompletableFuture() throws ExecutionException, InterruptedException {
+        CompletableFuture<Object> completableFuture = new CompletableFuture<>();
+        completableFuture.complete(123);
+        completableFuture.complete(23);
+        System.out.println(completableFuture.get());
     }
 }

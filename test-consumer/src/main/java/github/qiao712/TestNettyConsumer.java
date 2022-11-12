@@ -1,6 +1,7 @@
 package github.qiao712;
 
 import github.qiao712.rpc.cluster.FailoverCluster;
+import github.qiao712.rpc.cluster.ForkingCluster;
 import github.qiao712.rpc.loadbalance.ConsistentHashLoadBalance;
 import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proto.SerializationType;
@@ -37,8 +38,10 @@ public class TestNettyConsumer {
         LoadBalance loadBalance = new ConsistentHashLoadBalance();
 
         //创建Cluster，整合RpcClient, ServiceDiscovery, LoadBalance
-        FailoverCluster cluster = new FailoverCluster(rpcClient, serviceDiscovery, loadBalance);
-        cluster.setRetries(100);
+//        FailoverCluster cluster = new FailoverCluster(rpcClient, serviceDiscovery, loadBalance);
+//        cluster.setRetries(100);
+        ForkingCluster cluster = new ForkingCluster(rpcClient, serviceDiscovery, loadBalance);
+        cluster.setForks(3);
 
         //订阅服务
         serviceDiscovery.subscribeService(TestService.class.getCanonicalName());
@@ -52,7 +55,8 @@ public class TestNettyConsumer {
 
         //
         // 3033 2933
-        testMultiThread();
+//        testMultiThread();
+        testService.testThrow();
     }
 
     public static void tryOnce(){
