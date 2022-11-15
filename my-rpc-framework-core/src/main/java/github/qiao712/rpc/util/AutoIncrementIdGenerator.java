@@ -8,22 +8,26 @@ import java.util.function.IntUnaryOperator;
  * 线程安全的
  */
 public class AutoIncrementIdGenerator {
-    private final int begin;
-    private final int end;
+    private static class Holder{
+        static AutoIncrementIdGenerator instance = new AutoIncrementIdGenerator();
+    }
+
+    private AutoIncrementIdGenerator(){}
+
+    public static AutoIncrementIdGenerator getInstance(){
+        return Holder.instance;
+    }
+
     private final AtomicInteger id = new AtomicInteger();
 
-
-    public AutoIncrementIdGenerator() {
-        this.begin = 0;
-        this.end = Integer.MAX_VALUE;
-    }
-
-    public AutoIncrementIdGenerator(int begin, int end) {
-        this.begin = begin;
-        this.end = end;
-    }
-
     public int generateId(){
-        return id.getAndUpdate(operand -> operand + 1);
+        return id.getAndUpdate(operand -> {
+            ++operand;
+            if(operand == Integer.MAX_VALUE){
+                return 0;
+            }else{
+                return operand;
+            }
+        });
     }
 }

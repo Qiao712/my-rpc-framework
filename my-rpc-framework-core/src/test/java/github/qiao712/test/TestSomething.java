@@ -132,7 +132,7 @@ public class TestSomething {
         int threadNum = 5;
         int n = 10;
 
-        AutoIncrementIdGenerator autoIncrementIdGenerator = new AutoIncrementIdGenerator();
+        AutoIncrementIdGenerator autoIncrementIdGenerator = AutoIncrementIdGenerator.getInstance();
         boolean[] flag = new boolean[threadNum * n];
         Thread[] threads = new Thread[threadNum];
 

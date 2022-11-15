@@ -15,6 +15,8 @@ public interface RpcClient {
      */
     RpcResponse request(InetSocketAddress providerAddress, RpcRequest rpcRequest);
 
+
+    //各种属性---------------------------------------------------------
     void setSerializationType(SerializationType serializationType);
 
     SerializationType getSerializationType();
@@ -28,4 +30,14 @@ public interface RpcClient {
      * 设置响应的超时时间(ms). 为0表示一直等待.
      */
     void setResponseTimeout(long timeout);
+
+    /**
+     * 获取心跳间隔时间
+     */
+    long getHeartbeatInterval();
+
+    /**
+     * 设置心跳间隔时间(ms)
+     */
+    void setHeartbeatInterval(long heartbeatInterval);
 }

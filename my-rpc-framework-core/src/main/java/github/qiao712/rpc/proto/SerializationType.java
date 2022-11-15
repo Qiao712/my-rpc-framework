@@ -8,6 +8,7 @@ import github.qiao712.rpc.serializer.JDKSerializer;
  * 序列化方式
  */
 public enum SerializationType{
+    NONE(null),
     JDK_SERIALIZATION(new JDKSerializer()),
     HESSIAN_SERIALIZATION(new HessianSerializer());
 

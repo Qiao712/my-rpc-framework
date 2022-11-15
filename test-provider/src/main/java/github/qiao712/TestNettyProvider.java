@@ -47,7 +47,7 @@ public class TestNettyProvider {
         //创建RpcServer，接收并处理Rpc调用请求
         RpcServer rpcServer = new NettyRpcServer(port, requestHandler);
 //        rpcServer.setSerializationType();
-        rpcServer.setMaxIdleTime(3000);
+        rpcServer.setMaxIdleTime(15000);
         rpcServer.start();
     }
 }

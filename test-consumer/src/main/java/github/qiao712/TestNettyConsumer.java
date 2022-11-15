@@ -30,6 +30,7 @@ public class TestNettyConsumer {
         RpcClient rpcClient = new NettyRpcClient();
         rpcClient.setSerializationType(SerializationType.HESSIAN_SERIALIZATION);
         rpcClient.setResponseTimeout(1000L);
+        rpcClient.setHeartbeatInterval(5000);
 
         //服务发现组件
         ServiceDiscovery serviceDiscovery = new ZookeeperServiceDiscovery(new InetSocketAddress("114.116.245.83", 2181));
@@ -53,10 +54,7 @@ public class TestNettyConsumer {
         //线程池处理请求：2705.1489ms 2291.5871ms 2314.673ms
         //2578.6105 2219.8362
 
-        //
-        // 3033 2933
-//        testMultiThread();
-        testService.testThrow();
+        System.out.println(testService.add(123, 123));
     }
 
     public static void tryOnce(){

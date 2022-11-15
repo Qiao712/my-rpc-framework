@@ -12,11 +12,11 @@ public class Message<T> {
     public static final int MAX_LENGTH = 1024 * 1024 * 1024;    //最大长度
 
     //header
-    public static final int MAGIC_NUMBER = 0x712AB917;  //4bytes 标识协议类型
-    private int length;                                 //4bytes 整个消息的长度
-    private int requestId;                              //4bytes 请求id
-    private MessageType messageType;                    //4bytes 消息的类型
-    private SerializationType serializationType;        //4bytes 序列化方式
+    public static final int MAGIC_NUMBER = 0x712AB917;                          //4bytes 标识协议类型
+    private int length;                                                         //4bytes 整个消息的长度
+    private int requestId;                                                      //4bytes 请求id
+    private MessageType messageType;                                            //4bytes 消息的类型
+    private SerializationType serializationType = SerializationType.NONE;       //4bytes 序列化方式
 
     //payload
     private T payload;                                  //有效负载数据
@@ -33,10 +33,10 @@ public class Message<T> {
         if(serializationType == null){
             throw new RpcMessageCodecException("序列化方式未知");
         }
-        if(payload == null){
+        if(payload == null && messageType.getPayloadClass() != null){
             throw new RpcMessageCodecException("无有效负载");
         }
-        if(payload.getClass() != messageType.getPayloadClass()){
+        if(payload != null && payload.getClass() != messageType.getPayloadClass()){
             throw new RpcMessageCodecException("负载对象类型与消息类型字段不匹配");
         }
     }

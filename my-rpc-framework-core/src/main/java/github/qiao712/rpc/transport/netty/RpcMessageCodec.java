@@ -100,4 +100,9 @@ public class RpcMessageCodec extends ByteToMessageCodec<Message<?>> {
 
         log.debug("解码消息: {}", message);
     }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        log.error("ChannelHandler:", cause);
+    }
 }

@@ -22,27 +22,40 @@ public class ServerMessageInboundHandler extends SimpleChannelInboundHandler<Mes
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message<?> message) throws Exception {
-        if(message.getMessageType() == MessageType.REQUEST){
-            log.debug("请求: {}", message.getPayload());
+        switch (message.getMessageType()){
+            case REQUEST:{
+                log.debug("请求: {}", message.getPayload());
 
-            //用于发送请求的回调
-            ResponseSender responseSender = new ResponseSender() {
-                @Override
-                public void send(RpcResponse rpcResponse) {
-                    //返回请求
-                    Message<RpcResponse> responseMessage = new Message<>();
-                    responseMessage.setMessageType(MessageType.RESPONSE);
-                    responseMessage.setRequestId(message.getRequestId());
-                    responseMessage.setSerializationType(serializationType);
-                    responseMessage.setPayload(rpcResponse);
-                    ctx.writeAndFlush(responseMessage);
-                    log.debug("响应: {}", rpcResponse);
-                }
-            };
+                //用于发送请求的回调
+                ResponseSender responseSender = new ResponseSender() {
+                    @Override
+                    public void send(RpcResponse rpcResponse) {
+                        //返回请求
+                        Message<RpcResponse> responseMessage = new Message<>();
+                        responseMessage.setMessageType(MessageType.RESPONSE);
+                        responseMessage.setRequestId(message.getRequestId());
+                        responseMessage.setSerializationType(serializationType);
+                        responseMessage.setPayload(rpcResponse);
+                        ctx.writeAndFlush(responseMessage);
+                        log.debug("响应: {}", rpcResponse);
+                    }
+                };
 
-            requestHandler.handleRequest((RpcRequest) message.getPayload(), responseSender);
-        }else{
-            log.error("消费者接收到不支持的类型的消息(MessageType = {})", message.getMessageType());
+                requestHandler.handleRequest((RpcRequest) message.getPayload(), responseSender);
+                break;
+            }
+
+            case PING:{
+                //回应心跳
+                Message<Void> heartbeatAck = new Message<>();
+                heartbeatAck.setMessageType(MessageType.PONG);
+                ctx.writeAndFlush(heartbeatAck);
+                break;
+            }
+
+            default: {
+                log.error("消费者接收到不支持的类型的消息(MessageType = {})", message.getMessageType());
+            }
         }
     }
 

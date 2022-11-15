@@ -1,14 +1,10 @@
 package github.qiao712.rpc.transport.netty.client;
 
 import github.qiao712.rpc.exception.RpcException;
-import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proto.*;
-import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.transport.AbstractRpcClient;
 import github.qiao712.rpc.util.AutoIncrementIdGenerator;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import sun.nio.ch.Net;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
@@ -18,15 +14,15 @@ import java.util.concurrent.TimeoutException;
 
 public class NettyRpcClient extends AbstractRpcClient {
     private final WaitingRequestPool waitingRequestPool = new WaitingRequestPool();
-    private final AutoIncrementIdGenerator idGenerator = new AutoIncrementIdGenerator();
-    private final ClientChannelPool clientChannelPool = new ClientChannelPool(this);
+    private final AutoIncrementIdGenerator idGenerator = AutoIncrementIdGenerator.getInstance();
+    private final ChannelProvider channelProvider = new ChannelProvider(this);
 
     public NettyRpcClient(){
     }
 
     @Override
     public RpcResponse request(InetSocketAddress providerAddress, RpcRequest rpcRequest) {
-        Channel channel = clientChannelPool.getChannel(providerAddress);
+        Channel channel = channelProvider.getChannel(providerAddress);
 
         Message<RpcRequest> requestMessage = new Message<>();
         requestMessage.setMessageType(MessageType.REQUEST);
@@ -55,7 +51,7 @@ public class NettyRpcClient extends AbstractRpcClient {
         return waitingRequestPool;
     }
 
-    public ClientChannelPool getClientChannelPool(){
-        return clientChannelPool;
+    public ChannelProvider getChannelProvider(){
+        return channelProvider;
     }
 }
