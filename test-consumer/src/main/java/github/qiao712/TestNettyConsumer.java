@@ -5,6 +5,7 @@ import github.qiao712.rpc.cluster.ForkingCluster;
 import github.qiao712.rpc.loadbalance.ConsistentHashLoadBalance;
 import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.loadbalance.RandomLoadBalance;
+import github.qiao712.rpc.loadbalance.RoundRobinLoadBalance;
 import github.qiao712.rpc.proto.SerializationType;
 import github.qiao712.rpc.proxy.JDKRpcProxyFactory;
 import github.qiao712.rpc.proxy.RpcProxyFactory;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import qiao712.domain.Hello;
 import qiao712.service.TestService;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -28,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class TestNettyConsumer {
     public static TestService testService;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         //创建客户端并进行设置
         RpcClient rpcClient = new NettyRpcClient();
         rpcClient.setSerializationType(SerializationType.HESSIAN_SERIALIZATION);
@@ -46,7 +48,7 @@ public class TestNettyConsumer {
         }
 
         //选择负载均衡策略
-        LoadBalance loadBalance = new RandomLoadBalance();
+        LoadBalance loadBalance = new RoundRobinLoadBalance();
 
         //创建Cluster，整合RpcClient, ServiceDiscovery, LoadBalance
         FailoverCluster cluster = new FailoverCluster(rpcClient, serviceDiscovery, loadBalance);
@@ -57,6 +59,10 @@ public class TestNettyConsumer {
         //创建一个桩对象进行调用
         RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory();
         testService = rpcProxyFactory.createProxy(TestService.class, TestService.class.getCanonicalName(), cluster);
+
+        testLoadBalance();
+
+        System.in.read();
 
         testLoadBalance();
     }

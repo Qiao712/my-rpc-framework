@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
@@ -68,17 +69,20 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
                         log.debug("发现新的服务提供者: {}", event.getPath());
 
                         ProviderURL provider = getProviderURL(event.getPath());
-                        providerMap.computeIfPresent(serviceName, (serviceName, providers) -> {
-                            providers.add(provider);
-                            return providers;
+                        providerMap.compute(serviceName, (serviceName, providers) -> {
+                            //Copy on write, 替换成一个新的列表，避免并发问题，并让LoadBalance组件感知到列表的改变
+                            List<ProviderURL> newProviders = new ArrayList<>(providers);
+                            newProviders.add(provider);
+                            return newProviders;
                         });
                     }else if(event.getType() == Event.EventType.NodeDeleted){
                         log.debug("服务提供者下线: {}", event.getPath());
 
-                        providerMap.computeIfPresent(serviceName, (serviceName, providers) -> {
-                            ProviderURL provider = getProviderURL(event.getPath());
-                            providers.remove(provider);
-                            return providers;
+                        ProviderURL provider = getProviderURL(event.getPath());
+                        providerMap.compute(serviceName, (serviceName, providers) -> {
+                            //Copy on write, 替换成一个新的列表，避免并发问题，并让LoadBalance组件感知到列表的改变
+                            List<ProviderURL> newProviders = providers.stream().filter(e-> !Objects.equals(provider, e)).collect(Collectors.toList());
+                            return newProviders;
                         });
                     }
                 }

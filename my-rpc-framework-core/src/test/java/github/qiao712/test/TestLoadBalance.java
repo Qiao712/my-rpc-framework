@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -50,6 +51,7 @@ public class TestLoadBalance {
 
         //一个服务下线,后再测试
         providers.remove(0);
+        providers = new ArrayList<>(providers);     //必须换一个新的列表
         count = new HashMap<>();
         for(int i = 0; i < 10000; i++){
             rpcRequest.setArgs(new Object[]{random.nextInt()});
@@ -69,6 +71,8 @@ public class TestLoadBalance {
         provider.setWeight(random.nextInt(100));
         provider.setAddress(new InetSocketAddress("xxxx", random.nextInt(65536)));
         providers.add(provider);
+        providers = new ArrayList<>(providers); //必须换一个新的列表
+
         for(int i = 0; i < 10000; i++){
             rpcRequest.setArgs(new Object[]{random.nextInt()});
             ProviderURL selected = loadBalance.select(providers, rpcRequest);
@@ -98,8 +102,10 @@ public class TestLoadBalance {
             providers.add(provider);
         }
 
+        RpcRequest rpcRequest = new RpcRequest();
         for(int i = 0; i < 100000; i++){
-            ProviderURL selected = loadBalance.select(providers, null);
+            rpcRequest.setServiceName("testService" + random.nextInt(10));
+            ProviderURL selected = loadBalance.select(providers, rpcRequest);
             count.compute(selected, (key, i1) -> i1 == null ? 1 : i1 + 1);
         }
 
@@ -118,7 +124,7 @@ public class TestLoadBalance {
         //服务提供者地址列表
         Random random = new Random();
         List<ProviderURL> providers = new ArrayList<>();
-        Map<ProviderURL, Integer> count = new HashMap<>();
+        Map<ProviderURL, Integer> count = new ConcurrentHashMap<>();
         for(int i = 0; i < 10; i++){
             ProviderURL provider = new ProviderURL();
             provider.setService("testService");
@@ -127,12 +133,15 @@ public class TestLoadBalance {
             providers.add(provider);
         }
 
+        RpcRequest rpcRequest = new RpcRequest();
+
         int threadN = Runtime.getRuntime().availableProcessors();
         ExecutorService executorService = Executors.newFixedThreadPool(threadN);
         for(int j = 0; j < threadN; j++){
             executorService.execute(()->{
                 for(int i = 0; i < 1000; i++){
-                    ProviderURL selected = loadBalance.select(providers, null);
+                    rpcRequest.setServiceName("testService" + random.nextInt(10));
+                    ProviderURL selected = loadBalance.select(providers, rpcRequest);
                     count.compute(selected, (key, i1) -> i1 == null ? 1 : i1 + 1);
                 }
             });

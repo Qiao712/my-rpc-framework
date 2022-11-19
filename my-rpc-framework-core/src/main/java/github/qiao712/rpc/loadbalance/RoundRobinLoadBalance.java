@@ -3,68 +3,73 @@ package github.qiao712.rpc.loadbalance;
 import github.qiao712.rpc.proto.RpcRequest;
 import github.qiao712.rpc.registry.ProviderURL;
 
-import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 按权重轮询
  */
 public class RoundRobinLoadBalance implements LoadBalance{
-    private static class WeightedRoundRobin{
-        int weight;
-        AtomicLong current = new AtomicLong(0);
-    }
+    //缓存的权重信息 <服务名, 权重信息>
+    private final ConcurrentMap<String, WeightCache> cachedWeightInfo = new ConcurrentHashMap<>();
+    private static class Node{
+        ProviderURL providerURL;
+        AtomicLong current = new AtomicLong(0); //当前值
 
-    //缓存每个节点的权重
-    private final ConcurrentMap<ProviderURL, WeightedRoundRobin> weightMap = new ConcurrentHashMap<>();
+        //current += weight
+        long increaseCurrent(){
+            return current.addAndGet(providerURL.getWeight());
+        }
+    }
+    private static class WeightCache {
+        List<Node> nodes;
+        List<ProviderURL> providers;    //用于判断provider列表是否失效
+    }
 
     @Override
     public ProviderURL select(List<ProviderURL> providers, RpcRequest rpcRequest) {
-        int totalWeight = 0;
+        //从缓存中取得 或 重新生成
+        WeightCache weightCache = cachedWeightInfo.compute(rpcRequest.getServiceName(), (k, v)->{
+            //若providers改变则重新生成
+            return (v == null || v.providers != providers) ? generateWeightCache(providers) : v;
+        });
+
+        long totalWeight = 0;
         long maxCurrent = Long.MIN_VALUE;
-        ProviderURL selectedProvider = null;
-        WeightedRoundRobin selectedWrr = null;
+        Node selected = null;
+        for (Node node : weightCache.nodes) {
+            //更新当前值 current += weight
+            long current = node.increaseCurrent();
 
-        for (ProviderURL provider : providers) {
-            //添加新节点的权重信息
-            WeightedRoundRobin wrr = weightMap.computeIfAbsent(provider, k -> {
-                WeightedRoundRobin newWrr = new WeightedRoundRobin();
-                newWrr.weight = k.getWeight();
-                return newWrr;
-            });
-
-            //更新权重信息
-            if(Objects.equals(provider.getWeight(), wrr.weight)){
-                wrr.weight = provider.getWeight();
-            }
-
-            totalWeight += provider.getWeight();
-
-            //current += weight
-            long current = wrr.current.addAndGet(wrr.weight);
+            //找到当前值最大的
             if(current > maxCurrent){
                 maxCurrent = current;
-                selectedProvider = provider;
-                selectedWrr = wrr;
+                selected = node;
             }
+
+            totalWeight += current;
         }
 
-        //新的节点在之前的循环中被添加了， weightMap的长度一定不小于providers的长度
-        //若长度不一致说providers中有节点下线了，需刷新weightMap
-        if(weightMap.size() != providers.size()){
-            weightMap.clear();
-        }
-
-        if(selectedProvider != null){
-            selectedWrr.current.addAndGet(-totalWeight);
-            return selectedProvider;
+        if(selected != null){
+            selected.current.addAndGet(-totalWeight);
+            return selected.providerURL;
         }
 
         return providers.get(0);
+    }
+
+    private WeightCache generateWeightCache(List<ProviderURL> providers){
+        WeightCache weightCache = new WeightCache();
+        weightCache.providers = providers;
+        weightCache.nodes = new ArrayList<>(providers.size());
+        for (ProviderURL provider : providers) {
+            Node node = new Node();
+            node.providerURL = provider;
+            weightCache.nodes.add(node);
+        }
+        return weightCache;
     }
 }

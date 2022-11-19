@@ -15,18 +15,15 @@ import java.util.concurrent.ConcurrentMap;
  * 所有hash code 在 0 - 2^32-1 内
  */
 public class ConsistentHashLoadBalance implements LoadBalance{
-    //服务名 -- Selector
+    //<服务名, Selector>
     private final ConcurrentMap<String, ConsistentHashSelector> selectors = new ConcurrentHashMap<>();
 
     @Override
     public ProviderURL select(List<ProviderURL> providers, RpcRequest rpcRequest) {
-        //快速判断提供者列表的改变(极小概率失败)
-        int identityHashCode = providers.hashCode();
-
         ConsistentHashSelector selector = selectors.get(rpcRequest.getServiceName());
 
-        if(selector == null || selector.getIdentityHashCode() != identityHashCode){
-            selector = new ConsistentHashSelector(providers, identityHashCode);
+        if(selector == null || selector.providers != providers){
+            selector = new ConsistentHashSelector(providers);
             selectors.put(rpcRequest.getServiceName(), selector);
         }
 
@@ -34,12 +31,12 @@ public class ConsistentHashLoadBalance implements LoadBalance{
     }
 
     private static class ConsistentHashSelector{
-        private final int identityHashCode;                           //用于快速判断提供者列表是否改变
+        private final List<ProviderURL> providers;                    //用于判断Provider列表的改变
         private final TreeMap<Long, ProviderURL> virtualNodes = new TreeMap<>();
-        private final int replicaNumber = 160;                  //虚拟节点数量
+        private final int replicaNumber = 160;                        //虚拟节点数量
 
-        public ConsistentHashSelector(List<ProviderURL> providers, int identityHashCode){
-            this.identityHashCode = identityHashCode;
+        public ConsistentHashSelector(List<ProviderURL> providers){
+            this.providers = providers;
 
             //生成虚拟节点，分布到环上
             for (ProviderURL provider : providers) {
@@ -54,8 +51,8 @@ public class ConsistentHashLoadBalance implements LoadBalance{
             }
         }
 
-        public int getIdentityHashCode(){
-            return identityHashCode;
+        public List<ProviderURL> getProviders() {
+            return providers;
         }
 
         public ProviderURL select(RpcRequest rpcRequest){
