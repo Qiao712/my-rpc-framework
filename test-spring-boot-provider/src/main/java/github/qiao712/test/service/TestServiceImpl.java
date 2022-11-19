@@ -4,7 +4,9 @@ import github.qiao712.annotation.RpcService;
 import qiao712.domain.Hello;
 import qiao712.service.TestService;
 
-@RpcService
+import java.util.concurrent.atomic.AtomicLong;
+
+@RpcService(weight = 20)
 public class TestServiceImpl implements TestService {
 
     @Override
@@ -50,5 +52,12 @@ public class TestServiceImpl implements TestService {
     @Override
     public void testThrow() {
         throw new ArithmeticException("test exception");
+    }
+
+    private final AtomicLong counter = new AtomicLong();
+    @Override
+    public void count() {
+        long l = counter.incrementAndGet();
+        System.out.println("---------------调用次数: " + l + "-----------------------------");
     }
 }

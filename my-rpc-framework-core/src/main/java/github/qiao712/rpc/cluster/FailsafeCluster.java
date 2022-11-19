@@ -3,10 +3,11 @@ package github.qiao712.rpc.cluster;
 import github.qiao712.rpc.exception.RpcException;
 import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proto.RpcRequest;
+import github.qiao712.rpc.proto.RpcResponse;
+import github.qiao712.rpc.registry.ProviderURL;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.transport.RpcClient;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 
 /**
@@ -19,15 +20,15 @@ public class FailsafeCluster extends AbstractCluster {
     }
 
     @Override
-    protected Object doInvoke(List<InetSocketAddress> serviceInstances, RpcRequest rpcRequest) {
-        if(serviceInstances.isEmpty()){
+    protected RpcResponse doInvoke(List<ProviderURL> providers, RpcRequest rpcRequest) {
+        if(providers.isEmpty()){
             return null;
         }
 
-        InetSocketAddress selected = loadBalance.select(serviceInstances, rpcRequest);
+        ProviderURL selected = loadBalance.select(providers, rpcRequest);
 
         try{
-            return doRequest(selected, rpcRequest).getData();
+            return doRequest(selected, rpcRequest);
         }catch (RpcException rpcException){
             return null;
         }

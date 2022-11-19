@@ -2,11 +2,17 @@ package github.qiao712.test;
 
 import github.qiao712.rpc.loadbalance.ConsistentHashLoadBalance;
 import github.qiao712.rpc.loadbalance.LoadBalance;
+import github.qiao712.rpc.loadbalance.RandomLoadBalance;
+import github.qiao712.rpc.loadbalance.RoundRobinLoadBalance;
 import github.qiao712.rpc.proto.RpcRequest;
+import github.qiao712.rpc.registry.ProviderURL;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class TestLoadBalance {
     @Test
@@ -15,18 +21,22 @@ public class TestLoadBalance {
         Random random = new Random();
 
         //服务提供者地址列表
-        List<InetSocketAddress> addresses = new ArrayList<>();
+        List<ProviderURL> providers = new ArrayList<>();
         for(int i = 0; i < 100; i++){
-            addresses.add(new InetSocketAddress("xxxx", random.nextInt(65536)));
+            ProviderURL provider = new ProviderURL();
+            provider.setService("testService");
+            provider.setWeight(random.nextInt(100));
+            provider.setAddress(new InetSocketAddress("xxxx", random.nextInt(65536)));
+            providers.add(provider);
         }
 
         //测试不同参数
         RpcRequest rpcRequest = new RpcRequest();
         rpcRequest.setServiceName("testService");
-        Map<InetSocketAddress, Integer> count = new HashMap<>();
+        Map<ProviderURL, Integer> count = new HashMap<>();
         for(int i = 0; i < 10000; i++){
             rpcRequest.setArgs(new Object[]{random.nextInt()});
-            InetSocketAddress selected = loadBalance.select(addresses, rpcRequest);
+            ProviderURL selected = loadBalance.select(providers, rpcRequest);
             count.compute(selected, (key, i1) -> i1 == null ? 1 : i1 + 1);
         }
 
@@ -38,12 +48,12 @@ public class TestLoadBalance {
         System.out.println();
         System.out.println("使用的节点数:" + count.size());
 
-        //一个服务下线
-        addresses.remove(0);
+        //一个服务下线,后再测试
+        providers.remove(0);
         count = new HashMap<>();
         for(int i = 0; i < 10000; i++){
             rpcRequest.setArgs(new Object[]{random.nextInt()});
-            InetSocketAddress selected = loadBalance.select(addresses, rpcRequest);
+            ProviderURL selected = loadBalance.select(providers, rpcRequest);
             count.compute(selected, (key, i1) -> i1 == null ? 1 : i1 + 1);
         }
         for (Integer value : count.values()) {
@@ -53,11 +63,15 @@ public class TestLoadBalance {
         System.out.println();
         System.out.println("使用的节点数:" + count.size());
 
-        //一个服务实例上线
-        addresses.add(new InetSocketAddress("new", 4444));
+        //一个服务实例上线,再测试
+        ProviderURL provider = new ProviderURL();
+        provider.setService("testService");
+        provider.setWeight(random.nextInt(100));
+        provider.setAddress(new InetSocketAddress("xxxx", random.nextInt(65536)));
+        providers.add(provider);
         for(int i = 0; i < 10000; i++){
             rpcRequest.setArgs(new Object[]{random.nextInt()});
-            InetSocketAddress selected = loadBalance.select(addresses, rpcRequest);
+            ProviderURL selected = loadBalance.select(providers, rpcRequest);
             count.compute(selected, (key, i1) -> i1 == null ? 1 : i1 + 1);
         }
         for (Integer value : count.values()) {
@@ -66,6 +80,69 @@ public class TestLoadBalance {
         }
         System.out.println();
         System.out.println("使用的节点数:" + count.size());
+    }
+
+    @Test
+    public void testRandomLoadbalance(){
+        LoadBalance loadBalance = new RandomLoadBalance();
+
+        //服务提供者地址列表
+        Random random = new Random();
+        List<ProviderURL> providers = new ArrayList<>();
+        Map<ProviderURL, Integer> count = new HashMap<>();
+        for(int i = 0; i < 10; i++){
+            ProviderURL provider = new ProviderURL();
+            provider.setService("testService");
+            provider.setWeight(i);  //1 到 10
+            provider.setAddress(new InetSocketAddress("xxxx", random.nextInt(65536)));
+            providers.add(provider);
+        }
+
+        for(int i = 0; i < 100000; i++){
+            ProviderURL selected = loadBalance.select(providers, null);
+            count.compute(selected, (key, i1) -> i1 == null ? 1 : i1 + 1);
+        }
+
+        count.forEach((k, v)->{
+            System.out.println("权重:" + k.getWeight() + ". 被调用:" + v);
+        });
+    }
+
+    /**
+     * 并发测试 RoundRobin
+     */
+    @Test
+    public void testRoundRobinLoadBalance() throws InterruptedException {
+        LoadBalance loadBalance = new RoundRobinLoadBalance();
+
+        //服务提供者地址列表
+        Random random = new Random();
+        List<ProviderURL> providers = new ArrayList<>();
+        Map<ProviderURL, Integer> count = new HashMap<>();
+        for(int i = 0; i < 10; i++){
+            ProviderURL provider = new ProviderURL();
+            provider.setService("testService");
+            provider.setWeight(i);  //1 到 10
+            provider.setAddress(new InetSocketAddress("xxxx", random.nextInt(65536)));
+            providers.add(provider);
+        }
+
+        int threadN = Runtime.getRuntime().availableProcessors();
+        ExecutorService executorService = Executors.newFixedThreadPool(threadN);
+        for(int j = 0; j < threadN; j++){
+            executorService.execute(()->{
+                for(int i = 0; i < 1000; i++){
+                    ProviderURL selected = loadBalance.select(providers, null);
+                    count.compute(selected, (key, i1) -> i1 == null ? 1 : i1 + 1);
+                }
+            });
+        }
+        executorService.shutdown();
+        executorService.awaitTermination(100, TimeUnit.DAYS);
+
+        count.forEach((k, v)->{
+            System.out.println("权重:" + k.getWeight() + ". 被调用:" + v);
+        });
     }
 
     @Test

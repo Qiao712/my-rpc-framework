@@ -17,6 +17,13 @@ public class TestConsumer implements InitializingBean {
             System.out.println("注入失败");
             return;
         }
-        System.out.println(testService.add(1123, 12313));
+
+        testLoadBalance();
+    }
+
+    public void testLoadBalance(){
+        for(int i = 0; i < 10000; i++){
+            testService.count();
+        }
     }
 }

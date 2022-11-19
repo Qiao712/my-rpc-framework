@@ -1,12 +1,9 @@
 package github.qiao712.rpc.registry;
 
-import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.Set;
 
 /**
  * 服务发现
- * 通过服务名获取服务信息(地址、端口)
  */
 public interface ServiceDiscovery {
     /**
@@ -21,7 +18,7 @@ public interface ServiceDiscovery {
     void unsubscribeService(String serviceName);
 
     /**
-     * 获取服务实例列表(当前即为提供者地址列表)
+     * 获取服务提供者列表
      */
-    List<InetSocketAddress> getServiceInstances(String serviceName);
+    List<ProviderURL> getProviders(String serviceName);
 }

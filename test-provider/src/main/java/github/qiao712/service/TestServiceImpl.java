@@ -3,6 +3,8 @@ package github.qiao712.service;
 import qiao712.domain.Hello;
 import qiao712.service.TestService;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 public class TestServiceImpl implements TestService {
 
     @Override
@@ -48,5 +50,12 @@ public class TestServiceImpl implements TestService {
     @Override
     public void testThrow() {
         throw new ArithmeticException("test exception");
+    }
+
+    private final AtomicLong counter = new AtomicLong();
+    @Override
+    public void count() {
+        long l = counter.incrementAndGet();
+        System.out.println("---------------调用次数: " + l + "-----------------------------");
     }
 }

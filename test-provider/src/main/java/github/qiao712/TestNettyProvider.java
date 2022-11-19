@@ -22,14 +22,14 @@ public class TestNettyProvider {
         Random random = new Random(System.nanoTime());
         int port = 9712 + random.nextInt(1000);
         System.out.println("port: " + port);
-        InetSocketAddress providerAddress = new InetSocketAddress("127.0.0.1", port);
+        InetSocketAddress serverAddress = new InetSocketAddress("127.0.0.1", port);
         InetSocketAddress zkAddress = new InetSocketAddress("114.116.245.83", 2181);
 
         //服务注册组件
-        ServiceRegistry serviceRegistry = new ZookeeperServiceRegistry(providerAddress, zkAddress);
+        ServiceRegistry serviceRegistry = new ZookeeperServiceRegistry(zkAddress);
 
         //服务的容器，用于注册服务对象并通过服务注册组件注册
-        ServiceProvider serviceProvider = new ServiceProvider(serviceRegistry);
+        ServiceProvider serviceProvider = new ServiceProvider(serverAddress, serviceRegistry);
 
         //RpcRequest处理器
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
@@ -42,7 +42,7 @@ public class TestNettyProvider {
 //        RequestHandler requestHandler = new SerializableRequestHandler(serviceProvider);
 
         //注册服务
-        serviceProvider.addService(new TestServiceImpl());
+        serviceProvider.addService(new TestServiceImpl(), 10);
 
         //创建RpcServer，接收并处理Rpc调用请求
         RpcServer rpcServer = new NettyRpcServer(port, requestHandler);

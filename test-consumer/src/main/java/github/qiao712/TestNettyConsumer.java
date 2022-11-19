@@ -4,9 +4,11 @@ import github.qiao712.rpc.cluster.FailoverCluster;
 import github.qiao712.rpc.cluster.ForkingCluster;
 import github.qiao712.rpc.loadbalance.ConsistentHashLoadBalance;
 import github.qiao712.rpc.loadbalance.LoadBalance;
+import github.qiao712.rpc.loadbalance.RandomLoadBalance;
 import github.qiao712.rpc.proto.SerializationType;
 import github.qiao712.rpc.proxy.JDKRpcProxyFactory;
 import github.qiao712.rpc.proxy.RpcProxyFactory;
+import github.qiao712.rpc.registry.ProviderURL;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.registry.zookeeper.ZookeeperServiceDiscovery;
 import github.qiao712.rpc.transport.RpcClient;
@@ -16,6 +18,7 @@ import qiao712.domain.Hello;
 import qiao712.service.TestService;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -34,30 +37,31 @@ public class TestNettyConsumer {
 
         //服务发现组件
         ServiceDiscovery serviceDiscovery = new ZookeeperServiceDiscovery(new InetSocketAddress("114.116.245.83", 2181));
-
-        //选择负载均衡策略
-        LoadBalance loadBalance = new ConsistentHashLoadBalance();
-
-        //创建Cluster，整合RpcClient, ServiceDiscovery, LoadBalance
-//        FailoverCluster cluster = new FailoverCluster(rpcClient, serviceDiscovery, loadBalance);
-//        cluster.setRetries(100);
-        ForkingCluster cluster = new ForkingCluster(rpcClient, serviceDiscovery, loadBalance);
-        cluster.setForks(3);
-
         //订阅服务
         serviceDiscovery.subscribeService(TestService.class.getCanonicalName());
+        List<ProviderURL> providers = serviceDiscovery.getProviders(TestService.class.getCanonicalName());
+        System.out.println("服务提供者列表:");
+        for (ProviderURL provider : providers) {
+            System.out.println(provider);
+        }
+
+        //选择负载均衡策略
+        LoadBalance loadBalance = new RandomLoadBalance();
+
+        //创建Cluster，整合RpcClient, ServiceDiscovery, LoadBalance
+        FailoverCluster cluster = new FailoverCluster(rpcClient, serviceDiscovery, loadBalance);
+        cluster.setRetries(100);
+//        ForkingCluster cluster = new ForkingCluster(rpcClient, serviceDiscovery, loadBalance);
+//        cluster.setForks(3);
 
         //创建一个桩对象进行调用
         RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory();
         testService = rpcProxyFactory.createProxy(TestService.class, TestService.class.getCanonicalName(), cluster);
 
-        //线程池处理请求：2705.1489ms 2291.5871ms 2314.673ms
-        //2578.6105 2219.8362
-
-        System.out.println(testService.add(123, 123));
+        testLoadBalance();
     }
 
-    public static void tryOnce(){
+    public static void testOnce(){
         //调用测
         System.out.println(testService.add(123, 123));
         System.out.println(testService.add(123,123,123));
@@ -111,5 +115,12 @@ public class TestNettyConsumer {
         long end = System.nanoTime();
 
         System.out.println("耗时(ms):" + (end-begin)/1000000.0);
+    }
+
+    //调用count，测试负载均衡
+    public static void testLoadBalance(){
+        for(int i = 0; i < 10000; i++){
+            testService.count();
+        }
     }
 }

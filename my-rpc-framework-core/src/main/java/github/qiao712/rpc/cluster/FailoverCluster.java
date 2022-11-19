@@ -3,10 +3,11 @@ package github.qiao712.rpc.cluster;
 import github.qiao712.rpc.exception.RpcException;
 import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proto.RpcRequest;
+import github.qiao712.rpc.proto.RpcResponse;
+import github.qiao712.rpc.registry.ProviderURL;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.transport.RpcClient;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,30 +24,30 @@ public class FailoverCluster extends AbstractCluster{
     }
 
     @Override
-    protected Object doInvoke(List<InetSocketAddress> serviceInstances, RpcRequest rpcRequest) {
-        if(serviceInstances.isEmpty()){
-            throw new RpcException("请求失败: 无可用服务提供者.");
+    protected RpcResponse doInvoke(List<ProviderURL> providers, RpcRequest rpcRequest) {
+        if(providers.isEmpty()){
+            throw new RpcException("无可用服务提供者");
         }
 
-        List<InetSocketAddress> serviceInstancesCopy = serviceInstances;
+        List<ProviderURL> copyProviders = providers;
         RpcException lastException = null;
         int i;
-        for(i = 0; i < retries && !serviceInstances.isEmpty(); i++){
-            InetSocketAddress selected = loadBalance.select(serviceInstancesCopy, rpcRequest);
+        for(i = 0; i < retries && !providers.isEmpty(); i++){
+            ProviderURL selected = loadBalance.select(copyProviders, rpcRequest);
 
             try{
-                return doRequest(selected, rpcRequest).getData();
+                return doRequest(selected, rpcRequest);
             }catch (RpcException e){
-                if(serviceInstances.size() < 2) continue;   //不到两个可用的节点就不删了
+                if(providers.size() < 2) continue;   //不到两个可用的节点就不删了
                 //移除失败的节点
-                if(serviceInstancesCopy == serviceInstances){ //修改前先复制
-                    serviceInstancesCopy = new ArrayList<>(serviceInstances);
+                if(copyProviders == providers){ //修改前先复制
+                    copyProviders = new ArrayList<>(providers);
                 }
 
-                serviceInstancesCopy.remove(selected);
+                copyProviders.remove(selected);
 
-                if(serviceInstancesCopy.isEmpty()){
-                    serviceInstancesCopy = new ArrayList<>(serviceInstances);
+                if(copyProviders.isEmpty()){
+                    copyProviders = new ArrayList<>(providers);
                 }
                 lastException = e;
             }
@@ -61,7 +62,7 @@ public class FailoverCluster extends AbstractCluster{
 
     public void setRetries(int retries) {
         if(retries < 0){
-            throw new IllegalArgumentException("retries小于0");
+            throw new IllegalArgumentException("retries < 0.");
         }
         this.retries = retries;
     }

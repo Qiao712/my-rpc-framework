@@ -40,8 +40,7 @@ public class MyRPCServerAutoConfiguration {
     @ConditionalOnMissingBean
     public ServiceRegistry serviceRegistry(){
         if(properties.getRegistryAddresses() != null && properties.getRegistryAddresses().length != 0){
-            InetSocketAddress providerAddress = new InetSocketAddress(properties.getHost(), properties.getPort());
-            return new ZookeeperServiceRegistry(providerAddress, CuratorUtils.getAddressString(properties.getRegistryAddresses()));
+            return new ZookeeperServiceRegistry(CuratorUtils.getAddressString(properties.getRegistryAddresses()));
         }
         logger.error("未配置注册中新地址");
         return null;
@@ -54,7 +53,8 @@ public class MyRPCServerAutoConfiguration {
     @ConditionalOnMissingBean
     public ServiceProvider serviceProvider(ServiceRegistry serviceRegistry){
         if(serviceRegistry != null){
-            return new ServiceProvider(serviceRegistry);
+            InetSocketAddress serverAddress = new InetSocketAddress(properties.getHost(), properties.getPort());
+            return new ServiceProvider(serverAddress, serviceRegistry);
         }
         return null;
     }

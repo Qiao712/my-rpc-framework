@@ -1,5 +1,6 @@
 package github.qiao712.rpc.registry.zookeeper;
 
+import github.qiao712.rpc.registry.ProviderURL;
 import github.qiao712.rpc.registry.ServiceRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.RetryPolicy;
@@ -12,22 +13,23 @@ import org.apache.zookeeper.CreateMode;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 @Slf4j
 public class ZookeeperServiceRegistry implements ServiceRegistry, Closeable {
     private final static String NAME_SPACE = "my-rpc";
     private final CuratorFramework client;
-    private final InetSocketAddress providerAddress;
-    private final ConcurrentSkipListSet<String> registeredServices = new ConcurrentSkipListSet<>();
-    private final ConcurrentSkipListSet<String> failToDelete = new ConcurrentSkipListSet<>();   //删除失败的服务，等连接恢复后重试
 
-    public ZookeeperServiceRegistry(InetSocketAddress providerAddress, InetSocketAddress... zookeeperAddresses){
-        this(providerAddress, CuratorUtils.getAddressString(zookeeperAddresses));
+    private final ConcurrentMap<String, ProviderURL> registeredServices = new ConcurrentHashMap<>();
+    private final ConcurrentSkipListSet<String> failToDelete = new ConcurrentSkipListSet<>();   //删除失败的节点，等连接恢复后重试
+
+    public ZookeeperServiceRegistry(InetSocketAddress... zookeeperAddresses){
+        this(CuratorUtils.getAddressString(zookeeperAddresses));
     }
 
-    public ZookeeperServiceRegistry(InetSocketAddress providerAddress, String connectString){
-        this.providerAddress = providerAddress;
+    public ZookeeperServiceRegistry(String connectString){
 
         RetryPolicy retryPolicy = new RetryForever(10000);
         this.client = CuratorFrameworkFactory.builder()
@@ -43,24 +45,30 @@ public class ZookeeperServiceRegistry implements ServiceRegistry, Closeable {
     }
 
     @Override
-    public void register(String serviceName) {
+    public void register(ProviderURL url) {
         //添加临时节点  /service-name(interface name)/providers/provider-address(host:port)
         try {
-            registeredServices.add(serviceName);
-            failToDelete.remove(serviceName);
-            client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(getProviderNodePath(serviceName));
+            //服务提供者元数据
+            registeredServices.put(url.getService(), url);
+
+            String providerNodePath = getProviderNodePath(url);
+            failToDelete.remove(providerNodePath);
+            client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(providerNodePath);
         } catch (Exception e) {
-            log.error("注册服务 " + serviceName + " 失败", e);
+            log.error("注册服务 " + url + " 失败", e);
         }
     }
 
     @Override
     public void unregister(String serviceName) {
+        ProviderURL provider = registeredServices.remove(serviceName);
+        if(provider == null) return;
+        String providerNodePath = getProviderNodePath(provider);
+
         try {
-            registeredServices.remove(serviceName);
-            client.delete().forPath(getProviderNodePath(serviceName));
+            client.delete().forPath(providerNodePath);
         } catch (Exception e) {
-            failToDelete.add(serviceName);
+            failToDelete.add(providerNodePath);
             log.error("服务取消注册失败", e);
         }
     }
@@ -74,21 +82,21 @@ public class ZookeeperServiceRegistry implements ServiceRegistry, Closeable {
      * 生成表示该提供者的节点的路径
      *  "/service-name(interface name)/providers/provider-address(host:port)"
      */
-    private String getProviderNodePath(String serviceName){
-        return '/' + serviceName + "/providers/" + providerAddress.getHostName() + ":" + providerAddress.getPort();
+    private String getProviderNodePath(ProviderURL provider){
+        return '/' + provider.getService() + "/providers/" + provider;
     }
 
     /**
      * 重新注册所有节点
      */
     private void registerAll(){
-        for (String registeredService : registeredServices) {
+        registeredServices.forEach((serviceName, provider)->{
             try {
-                client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(getProviderNodePath(registeredService));
+                client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(getProviderNodePath(provider));
             } catch (Exception e) {
-                log.error("注册服务 " + registeredService + " 失败", e);
+                log.error("注册服务 " + serviceName + " 失败", e);
             }
-        }
+        });
     }
 
     /**
@@ -114,10 +122,10 @@ public class ZookeeperServiceRegistry implements ServiceRegistry, Closeable {
                         sessionChanged = false;
                     }
 
-                    //重新删除
-                    for (String serviceToDelete : failToDelete) {
+                    //重新删除 删除失败的节点
+                    for (String nodePath : failToDelete) {
                         try {
-                            client.delete().forPath(getProviderNodePath(serviceToDelete));
+                            client.delete().forPath(nodePath);
                         } catch (Exception e) {
                             log.error("服务取消注册失败", e);
                         }

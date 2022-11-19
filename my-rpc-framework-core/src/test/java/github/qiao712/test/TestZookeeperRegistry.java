@@ -1,5 +1,6 @@
 package github.qiao712.test;
 
+import github.qiao712.rpc.registry.ProviderURL;
 import github.qiao712.rpc.registry.zookeeper.ZookeeperServiceDiscovery;
 import github.qiao712.rpc.registry.zookeeper.ZookeeperServiceRegistry;
 import org.junit.Test;
@@ -10,38 +11,44 @@ import java.util.List;
 
 public class TestZookeeperRegistry {
 
+    private InetSocketAddress zkAddress = new InetSocketAddress("114.116.245.83", 2181);
+    //测试服务发现
     @Test
     public void testDiscovery() throws InterruptedException, IOException {
-        ZookeeperServiceDiscovery discovery = new ZookeeperServiceDiscovery(new InetSocketAddress("8.141.151.176", 2181));
+        ZookeeperServiceDiscovery discovery = new ZookeeperServiceDiscovery(zkAddress);
 
         discovery.subscribeService("test.Service1");
-        discovery.subscribeService("test.Service2");
 
-        System.out.println("test.Service1的实例列表:");
-        List<InetSocketAddress> serviceInstances = discovery.getServiceInstances("test.Service1");
-        for (InetSocketAddress serviceAddress : serviceInstances) {
-            System.out.println(serviceAddress);
+        List<ProviderURL> providers = discovery.getProviders("test.Service1");
+        while(providers.isEmpty()){
+            Thread.sleep(1000);
+            providers = discovery.getProviders("test.Service1");
         }
 
-        System.in.read();
-
         System.out.println("test.Service1的实例列表:");
-        serviceInstances = discovery.getServiceInstances("test.Service1");
-        for (InetSocketAddress serviceAddress : serviceInstances) {
-            System.out.println(serviceAddress);
+        for (ProviderURL provider : providers) {
+            System.out.println(provider);
         }
 
         Thread.sleep(10000000);
     }
 
+    //测试服务注册
     @Test
     public void testRegistry() throws InterruptedException {
-        //注册
-        ZookeeperServiceRegistry registry = new ZookeeperServiceRegistry(new InetSocketAddress("127.0.0.1", 1000),
-                new InetSocketAddress("8.141.151.176", 2181));
+        ZookeeperServiceRegistry registry = new ZookeeperServiceRegistry(new InetSocketAddress("114.116.245.83", 2181));
 
-        registry.register("test.Service1");
-        registry.register("test.Service2");
+        ProviderURL providerURL1 = new ProviderURL();
+        providerURL1.setService("test.Service1");
+        providerURL1.setAddress(new InetSocketAddress("localhost", 123));
+        providerURL1.setWeight(123);
+        registry.register(providerURL1);
+
+        ProviderURL providerURL2 = new ProviderURL();
+        providerURL2.setService("test.Service1");
+        providerURL2.setAddress(new InetSocketAddress("localhost", 4444));
+        providerURL2.setWeight(100);
+        registry.register(providerURL2);
 
         Thread.sleep(100000000);
 

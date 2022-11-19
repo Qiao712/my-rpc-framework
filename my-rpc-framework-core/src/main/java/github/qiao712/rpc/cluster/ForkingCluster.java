@@ -4,6 +4,7 @@ import github.qiao712.rpc.exception.RpcException;
 import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proto.RpcRequest;
 import github.qiao712.rpc.proto.RpcResponse;
+import github.qiao712.rpc.registry.ProviderURL;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.transport.RpcClient;
 
@@ -34,21 +35,21 @@ public class ForkingCluster extends AbstractCluster{
     }
 
     @Override
-    protected Object doInvoke(List<InetSocketAddress> serviceInstances, RpcRequest rpcRequest) {
-        if(serviceInstances.isEmpty()){
+    protected RpcResponse doInvoke(List<ProviderURL> providers, RpcRequest rpcRequest) {
+        if(providers.isEmpty()){
             throw new RpcException("请求失败: 无可用服务提供者.");
         }
 
         //选出足够的节点
-        List<InetSocketAddress> selected;
-        if(serviceInstances.size() < forks){
-            selected = serviceInstances;
+        List<ProviderURL> selected;
+        if(providers.size() < forks){
+            selected = providers;
         }else{
             selected = new ArrayList<>(forks);
-            List<InetSocketAddress> unselected = new ArrayList<>(serviceInstances);
+            List<ProviderURL> unselected = new ArrayList<>(providers);
 
             while(selected.size() < forks){
-                InetSocketAddress select = loadBalance.select(unselected, rpcRequest);
+                ProviderURL select = loadBalance.select(unselected, rpcRequest);
                 unselected.remove(select);
                 selected.add(select);
             }
@@ -57,11 +58,11 @@ public class ForkingCluster extends AbstractCluster{
         //并发的调用
         AtomicInteger failCount = new AtomicInteger(0);
         CompletableFuture<Object> future = new CompletableFuture<>();
-        for (InetSocketAddress socketAddress : selected) {
+        for (ProviderURL provider : selected) {
             executor.execute(()->{
                 try{
                     if(future.isDone()) return;    //已经调用成功
-                    RpcResponse rpcResponse = doRequest(socketAddress, rpcRequest);
+                    RpcResponse rpcResponse = doRequest(provider, rpcRequest);
                     future.complete(rpcResponse);
                 }catch (Throwable e){
                     //当最后一次调用失败时，返回异常
@@ -80,7 +81,7 @@ public class ForkingCluster extends AbstractCluster{
                 Throwable e = (Throwable) result;
                 throw new RpcException("ForkingCluster 调用失败, 最后一次失败原因" + e.getMessage(), e);
             }
-            return ((RpcResponse) result).getData();
+            return (RpcResponse) result;
         } catch (InterruptedException | ExecutionException e) {
             throw new RpcException("ForkingCluster 调用被中断");
         }

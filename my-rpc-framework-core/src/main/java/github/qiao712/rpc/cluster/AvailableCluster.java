@@ -3,10 +3,11 @@ package github.qiao712.rpc.cluster;
 import github.qiao712.rpc.exception.RpcException;
 import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proto.RpcRequest;
+import github.qiao712.rpc.proto.RpcResponse;
+import github.qiao712.rpc.registry.ProviderURL;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.transport.RpcClient;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 
 /**
@@ -19,15 +20,15 @@ public class AvailableCluster extends AbstractCluster{
     }
 
     @Override
-    protected Object doInvoke(List<InetSocketAddress> serviceInstances, RpcRequest rpcRequest) {
-        if(serviceInstances.isEmpty()){
-            throw new RpcException("请求失败: 无可用服务提供者");
+    protected RpcResponse doInvoke(List<ProviderURL> providers, RpcRequest rpcRequest) {
+        if(providers.isEmpty()){
+            throw new RpcException("无可用服务提供者");
         }
 
         RpcException lastException = null;
-        for (InetSocketAddress serviceInstance : serviceInstances) {
+        for (ProviderURL provider : providers) {
             try{
-                return doRequest(serviceInstance, rpcRequest).getData();
+                return doRequest(provider, rpcRequest);
             }catch (RpcException e){
                 lastException = e;
             }

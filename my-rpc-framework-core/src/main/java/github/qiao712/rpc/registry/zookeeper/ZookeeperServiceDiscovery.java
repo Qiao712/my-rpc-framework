@@ -1,5 +1,7 @@
 package github.qiao712.rpc.registry.zookeeper;
 
+import com.alibaba.fastjson.JSON;
+import github.qiao712.rpc.registry.ProviderURL;
 import github.qiao712.rpc.exception.RpcException;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import lombok.extern.slf4j.Slf4j;
@@ -13,12 +15,10 @@ import org.apache.zookeeper.Watcher;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
@@ -26,7 +26,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
     private final CuratorFramework client;
 
     //服务名 - 服务实例信息(提供者地址...)列表 Map
-    private final ConcurrentMap<String, List<InetSocketAddress>> providerMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, List<ProviderURL>> providerMap = new ConcurrentHashMap<>();
     //服务名 - 该服务的节点的Watcher
     private final ConcurrentMap<String, Watcher> watcherMap = new ConcurrentHashMap<>();
 
@@ -54,8 +54,8 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
         }
 
         //重新拉取服务列表
-        List<InetSocketAddress> providerAddresses = fetchProviderAddresses(serviceName);
-        providerMap.put(serviceName, providerAddresses);
+        List<ProviderURL> providers = fetchProviders(serviceName);
+        providerMap.put(serviceName, providers);
 
         //监听 /service-name/providers 节点及其子节点，改变时更新服务实例表
         String serviceProvidersNodePath = getServiceProvidersNodePath(serviceName);
@@ -67,21 +67,24 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
                     if(event.getType() == Event.EventType.NodeCreated){
                         log.debug("发现新的服务提供者: {}", event.getPath());
 
-                        InetSocketAddress newProvider = getProviderAddress(event.getPath());
-                        List<InetSocketAddress> providers = providerMap.get(serviceName);
-                        if(providers.contains(newProvider)){
-                            providerMap.get(serviceName).add(newProvider);
-                        }
+                        ProviderURL provider = getProviderURL(event.getPath());
+                        providerMap.computeIfPresent(serviceName, (serviceName, providers) -> {
+                            providers.add(provider);
+                            return providers;
+                        });
                     }else if(event.getType() == Event.EventType.NodeDeleted){
                         log.debug("服务提供者下线: {}", event.getPath());
 
-                        providerMap.get(serviceName).remove(getProviderAddress(event.getPath()));
-                    }else if(event.getType() == Event.EventType.NodeDataChanged){
-                        log.debug("服务提供者数据改变: {}", event.getPath());
+                        providerMap.computeIfPresent(serviceName, (serviceName, providers) -> {
+                            ProviderURL provider = getProviderURL(event.getPath());
+                            providers.remove(provider);
+                            return providers;
+                        });
                     }
                 }
             }
         };
+
         try {
             client.watchers().add().withMode(AddWatchMode.PERSISTENT_RECURSIVE).usingWatcher(watcher).forPath(serviceProvidersNodePath);
         } catch (Exception e) {
@@ -99,8 +102,8 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
     }
 
     @Override
-    public List<InetSocketAddress> getServiceInstances(String serviceName) {
-        List<InetSocketAddress> providerAddress = providerMap.get(serviceName);
+    public List<ProviderURL> getProviders(String serviceName) {
+        List<ProviderURL> providerAddress = providerMap.get(serviceName);
         if(providerAddress == null){
             throw new RpcException("未订阅服务(" + serviceName + ")");
         }
@@ -115,17 +118,23 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
     /**
      * 拉取某服务的提供者列表
      */
-    private List<InetSocketAddress> fetchProviderAddresses(String serviceName){
+    private List<ProviderURL> fetchProviders(String serviceName){
         try {
-            log.debug("拉取服务{}的实例列表", serviceName);
+            log.debug("拉取服务{}的提供者列表", serviceName);
+            List<ProviderURL> providers = new ArrayList<>();
 
-            List<String> providers = client.getChildren().forPath(getServiceProvidersNodePath(serviceName));
-            return providers.stream().distinct().map(this::getProviderAddress).filter(Objects::nonNull).collect(Collectors.toList());
+            List<String> providerNodePaths = client.getChildren().forPath(getServiceProvidersNodePath(serviceName));
+            for (String providerNodePath : providerNodePaths) {
+                ProviderURL provider = getProviderURL(providerNodePath);
+                if(provider != null) providers.add(provider);
+            }
+
+            return providers;
         } catch (Exception e) {
             log.error("获取服务提供者列表失败(service name = " + serviceName + ")", e);
         }
 
-        return Collections.emptyList();
+        return new ArrayList<>();
     }
 
     /**
@@ -137,24 +146,19 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
     }
 
     /**
-     * 从节点路径中提取地址
-     * "/service-name/providers/127.0.0.1:2022" -> 127.0.0.1:2022
+     * 从节点路径中获取ProviderURL
+     * "/service-name/providers/127.0.0.1:2022?service=service-name&weight=123"
      */
-    private InetSocketAddress getProviderAddress(String path){
+    private ProviderURL getProviderURL(String path){
         String[] nodeNames = path.split("/");
         if(nodeNames.length == 0) return null;
 
         String providerNodeName = nodeNames[nodeNames.length - 1];
-        String[] hostAndPort = providerNodeName.split(":");
-        if(hostAndPort.length == 2){
-            try{
-                int port = Integer.parseInt(hostAndPort[1]);
-                return new InetSocketAddress(hostAndPort[0], port);
-            } catch (Throwable e) {
-                return null;
-            }
+        try{
+            return ProviderURL.parseURL(providerNodeName);
+        }catch (Throwable e){
+            log.error("提供者URL格式错误", e);
         }
-
         return null;
     }
 }

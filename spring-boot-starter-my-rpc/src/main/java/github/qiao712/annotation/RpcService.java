@@ -10,4 +10,6 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE})
 @Inherited
 public @interface RpcService {
+    //权重
+    int weight() default 0;
 }

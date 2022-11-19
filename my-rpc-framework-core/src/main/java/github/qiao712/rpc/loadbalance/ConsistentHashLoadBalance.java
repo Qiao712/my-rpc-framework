@@ -1,6 +1,7 @@
 package github.qiao712.rpc.loadbalance;
 
 import github.qiao712.rpc.proto.RpcRequest;
+import github.qiao712.rpc.registry.ProviderURL;
 import github.qiao712.rpc.util.HashUtil;
 
 import java.net.InetSocketAddress;
@@ -14,16 +15,34 @@ import java.util.concurrent.ConcurrentMap;
  * 所有hash code 在 0 - 2^32-1 内
  */
 public class ConsistentHashLoadBalance implements LoadBalance{
+    //服务名 -- Selector
+    private final ConcurrentMap<String, ConsistentHashSelector> selectors = new ConcurrentHashMap<>();
+
+    @Override
+    public ProviderURL select(List<ProviderURL> providers, RpcRequest rpcRequest) {
+        //快速判断提供者列表的改变(极小概率失败)
+        int identityHashCode = providers.hashCode();
+
+        ConsistentHashSelector selector = selectors.get(rpcRequest.getServiceName());
+
+        if(selector == null || selector.getIdentityHashCode() != identityHashCode){
+            selector = new ConsistentHashSelector(providers, identityHashCode);
+            selectors.put(rpcRequest.getServiceName(), selector);
+        }
+
+        return selector.select(rpcRequest);
+    }
+
     private static class ConsistentHashSelector{
         private final int identityHashCode;                           //用于快速判断提供者列表是否改变
-        private final TreeMap<Long, InetSocketAddress> virtualNodes = new TreeMap<>();
+        private final TreeMap<Long, ProviderURL> virtualNodes = new TreeMap<>();
         private final int replicaNumber = 160;                  //虚拟节点数量
 
-        public ConsistentHashSelector(List<InetSocketAddress> providers, int identityHashCode){
+        public ConsistentHashSelector(List<ProviderURL> providers, int identityHashCode){
             this.identityHashCode = identityHashCode;
 
             //生成虚拟节点，分布到环上
-            for (InetSocketAddress provider : providers) {
+            for (ProviderURL provider : providers) {
                 for(int i = 0; i < replicaNumber/4; i++){
                     byte[] md5 = HashUtil.getMD5(provider.toString() + '#' + i);
                     //切成4个使用
@@ -39,9 +58,9 @@ public class ConsistentHashLoadBalance implements LoadBalance{
             return identityHashCode;
         }
 
-        public InetSocketAddress select(RpcRequest rpcRequest){
+        public ProviderURL select(RpcRequest rpcRequest){
             long requestHashCode = requestHashCode(rpcRequest);
-            Map.Entry<Long, InetSocketAddress> nodeEntry = virtualNodes.ceilingEntry(requestHashCode);
+            Map.Entry<Long, ProviderURL> nodeEntry = virtualNodes.ceilingEntry(requestHashCode);
             if(nodeEntry != null){
                 return nodeEntry.getValue();
             }else if(!virtualNodes.isEmpty()){
@@ -66,25 +85,5 @@ public class ConsistentHashLoadBalance implements LoadBalance{
         private long splitMD5(byte[] md5, int begin){
             return ((md5[begin] & 0xFFL) << 24) | ((md5[begin + 1] & 0xFFL) << 16) | ((md5[begin + 2] & 0xFFL) << 8) | (md5[begin + 3] & 0xFF);
         }
-    }
-
-    //服务名 -- Selector
-    private final ConcurrentMap<String, ConsistentHashSelector> selectors = new ConcurrentHashMap<>();
-
-    @Override
-    public InetSocketAddress select(List<InetSocketAddress> serviceInstances, RpcRequest rpcRequest) {
-        if(serviceInstances.isEmpty()) return null;
-
-        //快速判断提供者列表的改变(极小概率失败)
-        int identityHashCode = serviceInstances.hashCode();
-
-        ConsistentHashSelector selector = selectors.get(rpcRequest.getServiceName());
-
-        if(selector == null || selector.getIdentityHashCode() != identityHashCode){
-            selector = new ConsistentHashSelector(serviceInstances, identityHashCode);
-            selectors.put(rpcRequest.getServiceName(), selector);
-        }
-
-        return selector.select(rpcRequest);
     }
 }

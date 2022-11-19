@@ -28,7 +28,7 @@ public class RpcServiceBeanPostProcessor implements InstantiationAwareBeanPostPr
         if(rpcServiceAnnotation != null){
             try{
                 //注册服务
-                serviceProvider.addService(bean);
+                serviceProvider.addService(bean, rpcServiceAnnotation.weight());
 
                 Class<?>[] interfaces = bean.getClass().getInterfaces();
                 if(interfaces.length > 0) log.info("注册服务{}", interfaces[0].getCanonicalName());

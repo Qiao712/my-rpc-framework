@@ -10,4 +10,7 @@ public interface TestService {
     String hello();
     void delay(Integer time);
     void testThrow();
+
+    //测试调用次数
+    void count();
 }

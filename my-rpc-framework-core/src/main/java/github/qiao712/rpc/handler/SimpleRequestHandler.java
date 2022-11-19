@@ -4,7 +4,6 @@ import github.qiao712.rpc.proto.RpcRequest;
 import github.qiao712.rpc.proto.RpcResponse;
 import github.qiao712.rpc.proto.RpcResponseCode;
 import github.qiao712.rpc.registry.ServiceProvider;
-import github.qiao712.rpc.registry.ServiceRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
@@ -24,7 +23,7 @@ public class SimpleRequestHandler implements RequestHandler {
 
     @Override
     public void handleRequest(RpcRequest request, ResponseSender responseSender) {
-        Object service = serviceProvider.getService(request.getServiceName());
+        Object service = serviceProvider.getServiceObject(request.getServiceName());
 
         if(service == null){
             log.debug("未找到服务:{}", request.getServiceName());
