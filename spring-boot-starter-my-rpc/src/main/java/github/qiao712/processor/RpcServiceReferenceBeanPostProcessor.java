@@ -10,11 +10,13 @@ import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proxy.RpcProxyFactory;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.transport.RpcClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
 
 import java.lang.reflect.Field;
 
+@Slf4j
 public class RpcServiceReferenceBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
     private final RpcProxyFactory rpcProxyFactory;
     private final RpcClient rpcClient;
@@ -40,7 +42,7 @@ public class RpcServiceReferenceBeanPostProcessor implements InstantiationAwareB
                 //获取LoadBalance策略对象
                 LoadBalance loadBalance = LoadBalanceFactory.getLoadBalance(serviceReference.loadbalance());
                 if(loadBalance == null){
-
+                    log.error("引用服务失败:无法获取LoadBalance对象");
                 }
 
                 //创建Cluster
@@ -64,7 +66,7 @@ public class RpcServiceReferenceBeanPostProcessor implements InstantiationAwareB
                     field.setAccessible(true);
                     field.set(bean, proxy);
                 } catch (IllegalAccessException e) {
-                    //
+                    log.error("桩对象注入失败", e);
                 }
             }
         }

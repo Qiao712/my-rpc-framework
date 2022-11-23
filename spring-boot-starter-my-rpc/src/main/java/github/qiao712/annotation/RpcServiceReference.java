@@ -1,5 +1,10 @@
 package github.qiao712.annotation;
 
+import github.qiao712.rpc.cluster.Cluster;
+import github.qiao712.rpc.cluster.FailoverCluster;
+import github.qiao712.rpc.loadbalance.LoadBalance;
+import github.qiao712.rpc.loadbalance.RandomLoadBalance;
+
 import java.lang.annotation.*;
 
 /**
@@ -10,9 +15,9 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD})
 @Inherited
 public @interface RpcServiceReference {
-    String loadbalance() default "random";
+    Class<? extends LoadBalance> loadbalance() default RandomLoadBalance.class;
 
-    String cluster() default "failover";
+    Class<? extends Cluster> cluster() default FailoverCluster.class;
 
     //容错策略为Failover时的重试次数
     int retries() default 10;
