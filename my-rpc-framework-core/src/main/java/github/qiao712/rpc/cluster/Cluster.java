@@ -11,7 +11,8 @@ public interface Cluster {
      * @param serviceName 服务名
      * @param methodName 方法名
      * @param args 参数
+     * @param argTypes 参数类型
      * @return
      */
-    Object invoke(String serviceName, String methodName, Object[] args);
+    Object invoke(String serviceName, String methodName, Object[] args, Class<?>[] argTypes);
 }

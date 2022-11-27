@@ -3,6 +3,7 @@ package github.qiao712.service;
 import qiao712.domain.Hello;
 import qiao712.service.TestService;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class TestServiceImpl implements TestService {
@@ -20,6 +21,15 @@ public class TestServiceImpl implements TestService {
     @Override
     public int add2(int a, int b) {
         return a + b;
+    }
+
+    @Override
+    public int sum(List<Integer> nums) {
+        int sum = 0;
+        for (Integer num : nums) {
+            sum += num;
+        }
+        return sum;
     }
 
     @Override

@@ -27,7 +27,7 @@ public class JDKRpcProxyFactory implements RpcProxyFactory {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args){
-            return cluster.invoke(serviceName, method.getName(), args);
+            return cluster.invoke(serviceName, method.getName(), args, method.getParameterTypes());
         }
     }
 }

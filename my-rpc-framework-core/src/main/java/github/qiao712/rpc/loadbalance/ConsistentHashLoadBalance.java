@@ -4,7 +4,6 @@ import github.qiao712.rpc.proto.RpcRequest;
 import github.qiao712.rpc.registry.ProviderURL;
 import github.qiao712.rpc.util.HashUtil;
 
-import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -68,7 +67,7 @@ public class ConsistentHashLoadBalance implements LoadBalance{
 
         private long requestHashCode(RpcRequest rpcRequest){
             StringBuilder requestKey = new StringBuilder(rpcRequest.getServiceName());
-            Object[] args = rpcRequest.getArgs();
+            Object[] args = rpcRequest.getParams();
             if(args != null){
                 for (Object arg : args) {
                     requestKey.append(arg);

@@ -36,7 +36,7 @@ public class TestLoadBalance {
         rpcRequest.setServiceName("testService");
         Map<ProviderURL, Integer> count = new HashMap<>();
         for(int i = 0; i < 10000; i++){
-            rpcRequest.setArgs(new Object[]{random.nextInt()});
+            rpcRequest.setParams(new Object[]{random.nextInt()});
             ProviderURL selected = loadBalance.select(providers, rpcRequest);
             count.compute(selected, (key, i1) -> i1 == null ? 1 : i1 + 1);
         }
@@ -54,7 +54,7 @@ public class TestLoadBalance {
         providers = new ArrayList<>(providers);     //必须换一个新的列表
         count = new HashMap<>();
         for(int i = 0; i < 10000; i++){
-            rpcRequest.setArgs(new Object[]{random.nextInt()});
+            rpcRequest.setParams(new Object[]{random.nextInt()});
             ProviderURL selected = loadBalance.select(providers, rpcRequest);
             count.compute(selected, (key, i1) -> i1 == null ? 1 : i1 + 1);
         }
@@ -74,7 +74,7 @@ public class TestLoadBalance {
         providers = new ArrayList<>(providers); //必须换一个新的列表
 
         for(int i = 0; i < 10000; i++){
-            rpcRequest.setArgs(new Object[]{random.nextInt()});
+            rpcRequest.setParams(new Object[]{random.nextInt()});
             ProviderURL selected = loadBalance.select(providers, rpcRequest);
             count.compute(selected, (key, i1) -> i1 == null ? 1 : i1 + 1);
         }

@@ -20,6 +20,7 @@ import qiao712.service.TestService;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -60,20 +61,18 @@ public class TestNettyConsumer {
         RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory();
         testService = rpcProxyFactory.createProxy(TestService.class, TestService.class.getCanonicalName(), cluster);
 
-        testLoadBalance();
-
-        System.in.read();
-
-        testLoadBalance();
+        testOnce();
     }
 
     public static void testOnce(){
         //调用测
         System.out.println(testService.add(123, 123));
         System.out.println(testService.add(123,123,123));
-        testService.delay(5000);
-        System.out.println(testService.hello(new Hello(23, "hello")));
-        testService.testThrow();
+        System.out.println(testService.add2(333, 444));
+        System.out.println(testService.hello(new Hello(23, "hello", Collections.singletonList(123.0))));
+        testService.hello();
+//        testService.testThrow();
+//        testService.delay(5000);
     }
 
     public static void testSingleThread(){

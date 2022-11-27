@@ -24,11 +24,11 @@ public abstract class AbstractCluster implements Cluster{
     }
 
     @Override
-    public Object invoke(String serviceName, String methodName, Object[] args) {
+    public Object invoke(String serviceName, String methodName, Object[] args, Class<?>[] argTypes) {
         //获取服务实例列表
         List<ProviderURL> providers = serviceDiscovery.getProviders(serviceName);
 
-        RpcRequest rpcRequest = new RpcRequest(serviceName, methodName, args);
+        RpcRequest rpcRequest = new RpcRequest(serviceName, methodName, args, argTypes);
 
         return doInvoke(providers, rpcRequest).getData();
     }

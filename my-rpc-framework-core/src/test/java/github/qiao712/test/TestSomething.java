@@ -30,7 +30,7 @@ public class TestSomething {
     public void testMessageCoder(){
         RpcMessageCodec rpcMessageCodec = new RpcMessageCodec();
 
-        RpcRequest rpcRequest = new RpcRequest("testService", "testMethod", new Object[0]);
+        RpcRequest rpcRequest = new RpcRequest("testService", "testMethod", new Object[0], null);
         Message<RpcRequest> message = new Message<>();
         message.setPayload(rpcRequest);
         message.setMessageType(MessageType.REQUEST);

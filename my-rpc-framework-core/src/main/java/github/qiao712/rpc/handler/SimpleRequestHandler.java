@@ -31,20 +31,11 @@ public class SimpleRequestHandler implements RequestHandler {
             return;
         }
 
-        //获取方法
-        Object[] arguments = request.getArgs();
-        int argumentCount = arguments == null ? 0 : arguments.length;
-        Class<?>[] argumentTypes = new Class<?>[argumentCount];
-        for (int i = 0; i < argumentCount; i++) {
-            argumentTypes[i] =arguments[i].getClass();
-        }
-
         RpcResponse response;
         try {
-            Method method = service.getClass().getMethod(request.getMethodName(), argumentTypes);
-
             //反射调用
-            Object returnValue = method.invoke(service, arguments);
+            Method method = service.getClass().getMethod(request.getMethodName(), request.getParamTypes());
+            Object returnValue = method.invoke(service, request.getParams());
             response = RpcResponse.succeed(returnValue);
         } catch (NoSuchMethodException e) {
             log.debug("未找到方法", e);

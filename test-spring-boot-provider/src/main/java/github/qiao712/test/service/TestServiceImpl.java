@@ -4,6 +4,7 @@ import github.qiao712.annotation.RpcService;
 import qiao712.domain.Hello;
 import qiao712.service.TestService;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RpcService(weight = 20)
@@ -37,6 +38,15 @@ public class TestServiceImpl implements TestService {
     public String hello() {
         System.out.println("hello..");
         return "hellooooo";
+    }
+
+    @Override
+    public int sum(List<Integer> nums) {
+        int sum = 0;
+        for (Integer num : nums) {
+            sum += num;
+        }
+        return sum;
     }
 
     @Override
