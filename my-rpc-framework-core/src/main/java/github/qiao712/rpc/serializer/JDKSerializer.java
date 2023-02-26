@@ -1,6 +1,6 @@
 package github.qiao712.rpc.serializer;
 
-import github.qiao712.rpc.exception.RpcSerializationException;
+import github.qiao712.rpc.exception.RpcException;
 
 import java.io.*;
 
@@ -11,7 +11,7 @@ public class JDKSerializer implements Serializer{
             serialize(obj, byteArrayOutputStream);
             return byteArrayOutputStream.toByteArray();
         } catch (IOException e) {
-            throw new RpcSerializationException("序列化失败", e);
+            throw new RpcException("序列化失败", e);
         }
     }
 
@@ -20,7 +20,7 @@ public class JDKSerializer implements Serializer{
         try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream)){
             objectOutputStream.writeObject(obj);
         } catch (IOException e) {
-            throw new RpcSerializationException("序列化失败", e);
+            throw new RpcException("序列化失败", e);
         }
     }
 
@@ -29,7 +29,7 @@ public class JDKSerializer implements Serializer{
         try(ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data)){
             return deserialize(byteArrayInputStream, cls);
         } catch (IOException e) {
-            throw new RpcSerializationException("反序列化失败", e);
+            throw new RpcException("反序列化失败", e);
         }
     }
 
@@ -39,9 +39,9 @@ public class JDKSerializer implements Serializer{
         try(ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)){
             return (T) objectInputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            throw new RpcSerializationException("反序列化失败", e);
+            throw new RpcException("反序列化失败", e);
         } catch (ClassCastException e){
-            throw new RpcSerializationException("类型错误", e);
+            throw new RpcException("类型错误", e);
         }
     }
 }

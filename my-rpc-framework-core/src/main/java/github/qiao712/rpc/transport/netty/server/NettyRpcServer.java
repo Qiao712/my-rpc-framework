@@ -1,9 +1,9 @@
 package github.qiao712.rpc.transport.netty.server;
 
-import github.qiao712.rpc.exception.RpcException;
+import github.qiao712.rpc.exception.RpcFrameworkException;
+import github.qiao712.rpc.exception.RpcServerException;
 import github.qiao712.rpc.handler.RequestHandler;
 import github.qiao712.rpc.proto.Message;
-import github.qiao712.rpc.proto.SerializationType;
 import github.qiao712.rpc.transport.AbstractRpcServer;
 import github.qiao712.rpc.transport.netty.RpcMessageCodec;
 import io.netty.bootstrap.ServerBootstrap;
@@ -56,7 +56,7 @@ public class NettyRpcServer extends AbstractRpcServer {
             log.info("在端口{}上监听", port);
         } catch (RuntimeException | InterruptedException e){
             log.error("服务器启动失败", e);
-            throw new RpcException("服务器启动失败:", e);
+            throw new RpcServerException("服务器启动失败:", e);
         }
     }
 }

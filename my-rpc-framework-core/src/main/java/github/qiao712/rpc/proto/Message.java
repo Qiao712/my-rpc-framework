@@ -1,6 +1,6 @@
 package github.qiao712.rpc.proto;
 
-import github.qiao712.rpc.exception.RpcMessageCodecException;
+import github.qiao712.rpc.exception.RpcException;
 import lombok.Data;
 
 /**
@@ -23,21 +23,21 @@ public class Message<T> {
 
     /**
      * 检查字段合法性(不检查负载序列化后长度)
-     * @throws RpcMessageCodecException 描述不合法原因
+     * @throws RpcException 描述不合法原因
      */
     public void check(){
         //检查字段完整性
         if(messageType == null){
-            throw new RpcMessageCodecException("消息类型未知");
+            throw new RpcException("消息类型未知");
         }
         if(serializationType == null){
-            throw new RpcMessageCodecException("序列化方式未知");
+            throw new RpcException("序列化方式未知");
         }
         if(payload == null && messageType.getPayloadClass() != null){
-            throw new RpcMessageCodecException("无有效负载");
+            throw new RpcException("无有效负载");
         }
         if(payload != null && payload.getClass() != messageType.getPayloadClass()){
-            throw new RpcMessageCodecException("负载对象类型与消息类型字段不匹配");
+            throw new RpcException("负载对象类型与消息类型字段不匹配");
         }
     }
 }

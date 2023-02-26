@@ -1,6 +1,9 @@
 package github.qiao712.rpc.exception;
 
-public class RpcException extends RuntimeException{
+/**
+ * RPC调用过程中异常
+ */
+public class RpcException extends RpcFrameworkException{
     public RpcException() {
     }
 

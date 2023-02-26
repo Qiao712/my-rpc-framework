@@ -1,8 +1,8 @@
 package github.qiao712.rpc.registry.zookeeper;
 
-import com.alibaba.fastjson.JSON;
+import github.qiao712.rpc.exception.RpcClientException;
+import github.qiao712.rpc.exception.RpcFrameworkException;
 import github.qiao712.rpc.registry.ProviderURL;
-import github.qiao712.rpc.exception.RpcException;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.RetryPolicy;
@@ -15,8 +15,9 @@ import org.apache.zookeeper.Watcher;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -51,7 +52,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
     @Override
     public void subscribeService(String serviceName) {
         if(providerMap.containsKey(serviceName)) {
-            throw new RpcException("重复订阅服务(" + serviceName + ")");
+            throw new RpcClientException("重复订阅服务(" + serviceName + ")");
         }
 
         //重新拉取服务列表
@@ -70,7 +71,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
 
                         ProviderURL provider = getProviderURL(event.getPath());
                         providerMap.compute(serviceName, (serviceName, providers) -> {
-                            //Copy on write, 替换成一个新的列表，避免并发问题，并让LoadBalance组件感知到列表的改变
+                            //Copy on write
                             List<ProviderURL> newProviders = new ArrayList<>(providers);
                             newProviders.add(provider);
                             return newProviders;
@@ -80,7 +81,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
 
                         ProviderURL provider = getProviderURL(event.getPath());
                         providerMap.compute(serviceName, (serviceName, providers) -> {
-                            //Copy on write, 替换成一个新的列表，避免并发问题，并让LoadBalance组件感知到列表的改变
+                            //Copy on write
                             List<ProviderURL> newProviders = providers.stream().filter(e-> !Objects.equals(provider, e)).collect(Collectors.toList());
                             return newProviders;
                         });
@@ -93,7 +94,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
             client.watchers().add().withMode(AddWatchMode.PERSISTENT_RECURSIVE).usingWatcher(watcher).forPath(serviceProvidersNodePath);
         } catch (Exception e) {
             providerMap.remove(serviceName);
-            throw new RpcException("服务订阅失败", e);
+            throw new RpcClientException("服务订阅失败", e);
         }
         watcherMap.put(serviceName, watcher);
     }
@@ -109,7 +110,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, Closeable {
     public List<ProviderURL> getProviders(String serviceName) {
         List<ProviderURL> providerAddress = providerMap.get(serviceName);
         if(providerAddress == null){
-            throw new RpcException("未订阅服务(" + serviceName + ")");
+            throw new RpcClientException("未订阅服务(" + serviceName + ")");
         }
         return providerAddress;
     }

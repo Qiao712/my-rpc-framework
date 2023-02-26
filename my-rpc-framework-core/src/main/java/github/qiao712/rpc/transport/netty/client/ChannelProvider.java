@@ -1,6 +1,6 @@
 package github.qiao712.rpc.transport.netty.client;
 
-import github.qiao712.rpc.exception.RpcException;
+import github.qiao712.rpc.exception.RpcClientException;
 import github.qiao712.rpc.proto.Message;
 import github.qiao712.rpc.transport.netty.RpcMessageCodec;
 import io.netty.bootstrap.Bootstrap;
@@ -12,7 +12,6 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,7 +67,7 @@ public class ChannelProvider {
                         ChannelFuture channelFuture = bootstrap.connect(socketAddress);
                         return channelFuture.sync().channel();
                     } catch (Throwable e) {
-                        throw new RpcException("无法连接至" + socketAddress, e);
+                        throw new RpcClientException("无法连接至" + socketAddress, e);
                     }
                 }else{
                     return channel;
@@ -108,7 +107,7 @@ public class ChannelProvider {
                 try {
                     retry++;
                     getChannel(socketAddress);
-                } catch (RpcException e) {
+                } catch (RpcClientException e) {
                     log.debug("与" + socketAddress + "重连失败", e);
 
                     if(retry < maxReconnectTime){

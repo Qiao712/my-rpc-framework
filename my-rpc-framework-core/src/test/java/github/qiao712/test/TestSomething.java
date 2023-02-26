@@ -1,5 +1,9 @@
 package github.qiao712.test;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.Feature;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
 import github.qiao712.rpc.proto.*;
@@ -7,11 +11,14 @@ import github.qiao712.rpc.serializer.JDKSerializer;
 import github.qiao712.rpc.serializer.Serializer;
 import github.qiao712.rpc.transport.bio.RpcMessageCodec;
 import github.qiao712.rpc.util.AutoIncrementIdGenerator;
+import lombok.Data;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -46,12 +53,6 @@ public class TestSomething {
         System.out.println(originMessage);
     }
 
-
-
-
-    static class TestDto2{
-
-    }
 
 //    @Test
 //    public void testKryo(){
@@ -173,5 +174,37 @@ public class TestSomething {
         completableFuture.complete(123);
         completableFuture.complete(23);
         System.out.println(completableFuture.get());
+    }
+
+    @Data
+    static class A{
+        int v1;
+        String v2;
+    }
+    @Data
+    static class B{
+        A a;
+        String v3;
+        BigDecimal v4;
+        LocalDateTime time;
+    }
+    @Test
+    public void testGenericFastJson(){
+        A a = new A();
+        a.v1 = 1;
+        a.v2 = "hello";
+        B b = new B();
+        b.a = a;
+        b.v3 = "world";
+        b.v4 = BigDecimal.TEN;
+        b.time = LocalDateTime.now();
+
+        //代类型名的JSON
+        String s = JSON.toJSONString(b, SerializerFeature.WriteClassName);
+        System.out.println(s);
+
+        //自动转换为指定的类型
+        Object o = JSON.parseObject(s, Object.class, Feature.SupportAutoType);
+        System.out.println(o);
     }
 }

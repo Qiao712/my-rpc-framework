@@ -2,7 +2,7 @@ package github.qiao712.rpc.serializer;
 
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
-import github.qiao712.rpc.exception.RpcSerializationException;
+import github.qiao712.rpc.exception.RpcException;
 
 import java.io.*;
 
@@ -13,7 +13,7 @@ public class HessianSerializer implements Serializer{
             serialize(obj, outputStream);
             return outputStream.toByteArray();
         } catch (IOException e) {
-            throw new RpcSerializationException("序列化失败", e);
+            throw new RpcException("序列化失败", e);
         }
     }
 
@@ -24,7 +24,7 @@ public class HessianSerializer implements Serializer{
             hessian2Output.writeObject(obj);
             hessian2Output.flush();
         } catch (IOException e) {
-            throw new RpcSerializationException("序列化失败", e);
+            throw new RpcException("序列化失败", e);
         }
     }
 
@@ -33,7 +33,7 @@ public class HessianSerializer implements Serializer{
         try(ByteArrayInputStream inputStream = new ByteArrayInputStream(data)){
             return deserialize(inputStream, cls);
         } catch (IOException e) {
-            throw new RpcSerializationException("反序列化失败", e);
+            throw new RpcException("反序列化失败", e);
         }
     }
 
@@ -44,7 +44,7 @@ public class HessianSerializer implements Serializer{
             Hessian2Input hessian2Input = new Hessian2Input(inputStream);
             return (T) hessian2Input.readObject(cls);
         } catch (IOException e) {
-            throw new RpcSerializationException("反序列化失败", e);
+            throw new RpcException("反序列化失败", e);
         }
     }
 }

@@ -1,7 +1,6 @@
 package github.qiao712.processor;
 
 import github.qiao712.annotation.RpcService;
-import github.qiao712.rpc.exception.RpcException;
 import github.qiao712.rpc.registry.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
@@ -26,15 +25,11 @@ public class RpcServiceBeanPostProcessor implements InstantiationAwareBeanPostPr
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         RpcService rpcServiceAnnotation = AnnotationUtils.findAnnotation(bean.getClass(), RpcService.class);
         if(rpcServiceAnnotation != null){
-            try{
-                //注册服务
-                serviceProvider.addService(bean, rpcServiceAnnotation.weight());
+            //注册服务
+            serviceProvider.addService(bean, rpcServiceAnnotation.weight());
 
-                Class<?>[] interfaces = bean.getClass().getInterfaces();
-                if(interfaces.length > 0) log.info("注册服务{}", interfaces[0].getCanonicalName());
-            }catch (RpcException e){
-                log.error("服务"+beanName+"注册失败", e);
-            }
+            Class<?>[] interfaces = bean.getClass().getInterfaces();
+            if(interfaces.length > 0) log.info("注册服务{}", interfaces[0].getCanonicalName());
         }
 
         return bean;

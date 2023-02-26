@@ -1,6 +1,6 @@
 package github.qiao712.rpc.transport.netty;
 
-import github.qiao712.rpc.exception.RpcMessageCodecException;
+import github.qiao712.rpc.exception.RpcException;
 import github.qiao712.rpc.proto.Message;
 import github.qiao712.rpc.proto.MessageType;
 import github.qiao712.rpc.proto.SerializationType;
@@ -57,7 +57,7 @@ public class RpcMessageCodec extends ByteToMessageCodec<Message<?>> {
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         int magicNumber = in.readInt();
         if(magicNumber != Message.MAGIC_NUMBER){
-            throw new RpcMessageCodecException("错误的协议");
+            throw new RpcException("错误的协议");
         }
 
         Message<Object> message = new Message<>();
@@ -65,7 +65,7 @@ public class RpcMessageCodec extends ByteToMessageCodec<Message<?>> {
         //length
         message.setLength(in.readInt());
         if(message.getLength() > Message.MAX_LENGTH || message.getLength() < Message.HEADER_LENGTH){
-            throw new RpcMessageCodecException("无效的消息长度");
+            throw new RpcException("无效的消息长度");
         }
 
         //requestId
@@ -74,14 +74,14 @@ public class RpcMessageCodec extends ByteToMessageCodec<Message<?>> {
         //message type
         int messageTypeCode = in.readInt();
         if(MessageType.values().length <= messageTypeCode || messageTypeCode < 0){
-            throw new RpcMessageCodecException("不存在消息类型:" + messageTypeCode);
+            throw new RpcException("不存在消息类型:" + messageTypeCode);
         }
         message.setMessageType(MessageType.values()[messageTypeCode]);
 
         //serialization type
         int serializationTypeCode = in.readInt();
         if(SerializationType.values().length <= serializationTypeCode || serializationTypeCode < 0){
-            throw new RpcMessageCodecException("不存在消息序列化方式:" + serializationTypeCode);
+            throw new RpcException("不存在消息序列化方式:" + serializationTypeCode);
         }
         message.setSerializationType(SerializationType.values()[serializationTypeCode]);
 

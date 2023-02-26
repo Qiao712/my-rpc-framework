@@ -7,7 +7,7 @@ import qiao712.service.TestService;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-@RpcService(weight = 20)
+@RpcService(weight = 40)
 public class TestServiceImpl implements TestService {
 
     @Override
