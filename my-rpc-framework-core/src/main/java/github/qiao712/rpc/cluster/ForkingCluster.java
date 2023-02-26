@@ -64,11 +64,11 @@ public class ForkingCluster extends AbstractCluster{
                     if(future.isDone()) return;    //已经调用成功
                     RpcResponse rpcResponse = doRequest(provider, rpcRequest);
                     future.complete(rpcResponse);
-                }catch (Throwable e){
+                }catch (RpcException e){
                     //当最后一次调用失败时，返回异常
                     int count = failCount.incrementAndGet();
                     if(count >= selected.size()){
-                        future.complete(e);
+                        future.completeExceptionally(e);
                     }
                 }
             });
@@ -77,13 +77,11 @@ public class ForkingCluster extends AbstractCluster{
         //获取结果或最后一次的异常
         try {
             Object result = future.get();
-            if(result instanceof Throwable){
-                Throwable e = (Throwable) result;
-                throw new RpcException("ForkingCluster 调用失败, 最后一次失败原因" + e.getMessage(), e);
-            }
             return (RpcResponse) result;
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RpcException("ForkingCluster 调用被中断");
+        } catch (InterruptedException e) {
+            throw new RpcException("调用被中断");
+        } catch (ExecutionException e) {
+            throw new RpcException("调用失败. 最后一次失败原因" + e.getMessage(), e);
         }
     }
 

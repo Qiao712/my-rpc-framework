@@ -61,7 +61,7 @@ public class TestNettyConsumer {
         RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory();
         testService = rpcProxyFactory.createProxy(TestService.class, TestService.class.getCanonicalName(), cluster);
 
-        testOnce();
+        testService.testThrow();
     }
 
     public static void testOnce(){

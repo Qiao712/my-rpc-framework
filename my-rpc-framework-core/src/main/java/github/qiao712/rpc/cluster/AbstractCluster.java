@@ -28,34 +28,33 @@ public abstract class AbstractCluster implements Cluster{
         //获取服务实例列表
         List<ProviderURL> providers = serviceDiscovery.getProviders(serviceName);
 
+        //组装请求对象
         RpcRequest rpcRequest = new RpcRequest(serviceName, methodName, args, argTypes);
 
-        return doInvoke(providers, rpcRequest).getData();
+        //交给容错策略进行调用
+        RpcResponse rpcResponse = doInvoke(providers, rpcRequest);
+
+        if(rpcResponse.getCode() == RpcResponseCode.SUCCESS){
+            //成功返回结果
+            return rpcResponse.getData();
+        }else if(rpcResponse.getCode() == RpcResponseCode.METHOD_THROWING){
+            //被调用的方法抛出异常，包装后抛出
+            throw new RpcException("服务端异常:方法抛出异常", (Throwable) rpcResponse.getData());
+        }else{
+            //其他的错误原因
+            throw new RpcException("服务端异常:" + rpcResponse.getCode().getDescription());
+        }
     }
 
     /**
      * 按容错策略进行调用
-     * @return
      */
     protected abstract RpcResponse doInvoke(List<ProviderURL> providers, RpcRequest rpcRequest);
 
     /**
      * 通过RpcClient发送调用请求，处理返回对象
-     * @return RpcResponse 调用成功时返回
-     * @throws RpcException 描述调用失败的原因
      */
     protected RpcResponse doRequest(ProviderURL provider, RpcRequest rpcRequest){
-        RpcResponse rpcResponse = rpcClient.request(provider.getAddress(), rpcRequest);
-
-        if(rpcResponse.getCode() == RpcResponseCode.SUCCESS){
-            //调用成功
-            return rpcResponse;
-        }else if (rpcResponse.getCode() == RpcResponseCode.METHOD_THROWING){
-            //重新抛出服务提供者函数抛出的异常
-            throw new RpcException("异常返回(" + provider + "):" + rpcResponse.getCode(), (Throwable) rpcResponse.getData());
-        }else{
-            //调用失败
-            throw new RpcException("调用失败(" + provider + "):" + rpcResponse.getCode());
-        }
+        return rpcClient.request(provider.getAddress(), rpcRequest);
     }
 }

@@ -29,27 +29,24 @@ public class FailoverCluster extends AbstractCluster{
             throw new RpcException("无可用服务提供者");
         }
 
-        List<ProviderURL> copyProviders = providers;
+        List<ProviderURL> providersCopy = providers;
         RpcException lastException = null;
         int i;
         for(i = 0; i < retries && !providers.isEmpty(); i++){
-            ProviderURL selected = loadBalance.select(copyProviders, rpcRequest);
+            ProviderURL selected = loadBalance.select(providersCopy, rpcRequest);
 
             try{
                 return doRequest(selected, rpcRequest);
             }catch (RpcException e){
-                if(providers.size() < 2) continue;   //不到两个可用的节点就不删了
-                //移除失败的节点
-                if(copyProviders == providers){ //修改前先复制
-                    copyProviders = new ArrayList<>(providers);
-                }
-
-                copyProviders.remove(selected);
-
-                if(copyProviders.isEmpty()){
-                    copyProviders = new ArrayList<>(providers);
-                }
                 lastException = e;
+
+                if(providersCopy.size() == 1) break;
+
+                //移除失败的节点,修改前先复制
+                if(providersCopy == providers){
+                    providersCopy = new ArrayList<>(providers);
+                }
+                providersCopy.remove(selected);
             }
         }
 

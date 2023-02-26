@@ -4,6 +4,7 @@ import github.qiao712.rpc.exception.RpcException;
 import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proto.RpcRequest;
 import github.qiao712.rpc.proto.RpcResponse;
+import github.qiao712.rpc.proto.RpcResponseCode;
 import github.qiao712.rpc.registry.ProviderURL;
 import github.qiao712.rpc.registry.ServiceDiscovery;
 import github.qiao712.rpc.transport.RpcClient;
@@ -30,7 +31,8 @@ public class FailsafeCluster extends AbstractCluster {
         try{
             return doRequest(selected, rpcRequest);
         }catch (RpcException rpcException){
-            return null;
+            //伪装成正确的调用，但返回空值
+            return new RpcResponse(RpcResponseCode.SUCCESS, null);
         }
     }
 }
