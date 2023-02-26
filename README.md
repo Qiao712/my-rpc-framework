@@ -69,9 +69,6 @@
 * 配置
 * 优雅停机
 * 服务提供者下线时，Zookeeper的临时节点删除延时较大; 无法删除服务节点
-* 心跳
-* 整合Spring
 * 实现Spring-starter支持自动配置
-* 容错机制: Failback, Forking, Broadcast 
-* 处理请求的线程池
+* 容错机制: Failback, Broadcast
 * 各种组件的配置

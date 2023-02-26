@@ -14,14 +14,14 @@ import java.util.concurrent.ConcurrentMap;
  * 所有hash code 在 0 - 2^32-1 内
  */
 public class ConsistentHashLoadBalance implements LoadBalance{
-    //<服务名, Selector>
+    //<服务名,函数名, Selector>
     private final ConcurrentMap<String, ConsistentHashSelector> selectors = new ConcurrentHashMap<>();
 
     @Override
     public ProviderURL select(List<ProviderURL> providers, RpcRequest rpcRequest) {
-        ConsistentHashSelector selector = selectors.get(rpcRequest.getServiceName());
+        ConsistentHashSelector selector = selectors.get(rpcRequest.getServiceName() + rpcRequest.getMethodName());
 
-        if(selector == null || selector.providers != providers){
+        if(selector == null || selector.providersHashCode != providers.hashCode()){
             selector = new ConsistentHashSelector(providers);
             selectors.put(rpcRequest.getServiceName(), selector);
         }
@@ -30,12 +30,12 @@ public class ConsistentHashLoadBalance implements LoadBalance{
     }
 
     private static class ConsistentHashSelector{
-        private final List<ProviderURL> providers;                    //用于判断Provider列表的改变
+        private final int providersHashCode;                          //用于判断Provider列表的改变
         private final TreeMap<Long, ProviderURL> virtualNodes = new TreeMap<>();
         private final int replicaNumber = 160;                        //虚拟节点数量
 
         public ConsistentHashSelector(List<ProviderURL> providers){
-            this.providers = providers;
+            this.providersHashCode = providers.hashCode();
 
             //生成虚拟节点，分布到环上
             for (ProviderURL provider : providers) {
@@ -50,32 +50,17 @@ public class ConsistentHashLoadBalance implements LoadBalance{
             }
         }
 
-        public List<ProviderURL> getProviders() {
-            return providers;
-        }
-
         public ProviderURL select(RpcRequest rpcRequest){
             long requestHashCode = requestHashCode(rpcRequest);
             Map.Entry<Long, ProviderURL> nodeEntry = virtualNodes.ceilingEntry(requestHashCode);
-            if(nodeEntry != null){
-                return nodeEntry.getValue();
-            }else if(!virtualNodes.isEmpty()){
-                return virtualNodes.firstEntry().getValue();
+            if(nodeEntry == null){
+                nodeEntry = virtualNodes.firstEntry();
             }
-            return null;
+            return nodeEntry.getValue();
         }
 
         private long requestHashCode(RpcRequest rpcRequest){
-            StringBuilder requestKey = new StringBuilder(rpcRequest.getServiceName());
-            Object[] args = rpcRequest.getParams();
-            if(args != null){
-                for (Object arg : args) {
-                    requestKey.append(arg);
-                }
-            }
-
-            byte[] md5 = HashUtil.getMD5(requestKey.toString());
-            return splitMD5(md5, 0);
+            return Arrays.hashCode(rpcRequest.getParams());
         }
 
         private long splitMD5(byte[] md5, int begin){
