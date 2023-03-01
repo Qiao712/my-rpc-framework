@@ -5,7 +5,7 @@ import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proto.RpcRequest;
 import github.qiao712.rpc.proto.RpcResponse;
 import github.qiao712.rpc.registry.ProviderURL;
-import github.qiao712.rpc.registry.ServiceDiscovery;
+import github.qiao712.rpc.registry.ServiceRegistry;
 import github.qiao712.rpc.transport.RpcClient;
 
 import java.util.ArrayList;
@@ -19,8 +19,8 @@ public class FailoverCluster extends AbstractCluster{
     private final static int DEFAULT_RETRIES = 5;
     private int retries = DEFAULT_RETRIES;
 
-    public FailoverCluster(RpcClient rpcClient, ServiceDiscovery serviceDiscovery, LoadBalance loadBalance) {
-        super(rpcClient, serviceDiscovery, loadBalance);
+    public FailoverCluster(RpcClient rpcClient, ServiceRegistry serviceRegistry, LoadBalance loadBalance) {
+        super(rpcClient, serviceRegistry, loadBalance);
     }
 
     @Override

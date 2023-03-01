@@ -6,27 +6,26 @@ import github.qiao712.rpc.proto.RpcRequest;
 import github.qiao712.rpc.proto.RpcResponse;
 import github.qiao712.rpc.proto.RpcResponseCode;
 import github.qiao712.rpc.registry.ProviderURL;
-import github.qiao712.rpc.registry.ServiceDiscovery;
+import github.qiao712.rpc.registry.ServiceRegistry;
 import github.qiao712.rpc.transport.RpcClient;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 
 public abstract class AbstractCluster implements Cluster{
     protected final RpcClient rpcClient;
-    protected final ServiceDiscovery serviceDiscovery;
+    protected final ServiceRegistry serviceRegistry;
     protected final LoadBalance loadBalance;
 
-    public AbstractCluster(RpcClient rpcClient, ServiceDiscovery serviceDiscovery, LoadBalance loadBalance) {
+    public AbstractCluster(RpcClient rpcClient, ServiceRegistry serviceRegistry, LoadBalance loadBalance) {
         this.rpcClient = rpcClient;
-        this.serviceDiscovery = serviceDiscovery;
+        this.serviceRegistry = serviceRegistry;
         this.loadBalance = loadBalance;
     }
 
     @Override
     public Object invoke(String serviceName, String methodName, Object[] args, Class<?>[] argTypes) {
         //获取服务实例列表
-        List<ProviderURL> providers = serviceDiscovery.getProviders(serviceName);
+        List<ProviderURL> providers = serviceRegistry.getProviders(serviceName);
 
         //组装请求对象
         RpcRequest rpcRequest = new RpcRequest(serviceName, methodName, args, argTypes);

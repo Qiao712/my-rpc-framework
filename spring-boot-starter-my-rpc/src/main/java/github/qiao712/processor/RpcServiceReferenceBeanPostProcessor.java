@@ -8,7 +8,7 @@ import github.qiao712.rpc.cluster.FailoverCluster;
 import github.qiao712.rpc.cluster.ForkingCluster;
 import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proxy.RpcProxyFactory;
-import github.qiao712.rpc.registry.ServiceDiscovery;
+import github.qiao712.rpc.registry.ServiceRegistry;
 import github.qiao712.rpc.transport.RpcClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
@@ -20,12 +20,12 @@ import java.lang.reflect.Field;
 public class RpcServiceReferenceBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
     private final RpcProxyFactory rpcProxyFactory;
     private final RpcClient rpcClient;
-    private final ServiceDiscovery serviceDiscovery;
+    private final ServiceRegistry serviceRegistry;
 
-    public RpcServiceReferenceBeanPostProcessor(RpcProxyFactory rpcProxyFactory, RpcClient rpcClient, ServiceDiscovery serviceDiscovery) {
+    public RpcServiceReferenceBeanPostProcessor(RpcProxyFactory rpcProxyFactory, RpcClient rpcClient, ServiceRegistry serviceRegistry) {
         this.rpcProxyFactory = rpcProxyFactory;
         this.rpcClient = rpcClient;
-        this.serviceDiscovery = serviceDiscovery;
+        this.serviceRegistry = serviceRegistry;
     }
 
     /**
@@ -46,7 +46,7 @@ public class RpcServiceReferenceBeanPostProcessor implements InstantiationAwareB
                 }
 
                 //创建Cluster
-                Cluster cluster = ClusterFactory.createCluster(serviceReference.cluster(), rpcClient, serviceDiscovery, loadBalance);
+                Cluster cluster = ClusterFactory.createCluster(serviceReference.cluster(), rpcClient, serviceRegistry, loadBalance);
                 if(cluster instanceof FailoverCluster){
                     //设置重试次数
                     ((FailoverCluster) cluster).setRetries(serviceReference.retries());
@@ -56,7 +56,7 @@ public class RpcServiceReferenceBeanPostProcessor implements InstantiationAwareB
                 }
 
                 //订阅服务
-                serviceDiscovery.subscribeService(field.getType().getCanonicalName());
+                serviceRegistry.subscribe(field.getType().getCanonicalName());
 
                 //创建桩对象
                 Object proxy = rpcProxyFactory.createProxy(field.getType(), field.getType().getCanonicalName(), cluster);

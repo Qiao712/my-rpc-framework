@@ -5,10 +5,9 @@ import github.qiao712.rpc.loadbalance.LoadBalance;
 import github.qiao712.rpc.proto.RpcRequest;
 import github.qiao712.rpc.proto.RpcResponse;
 import github.qiao712.rpc.registry.ProviderURL;
-import github.qiao712.rpc.registry.ServiceDiscovery;
+import github.qiao712.rpc.registry.ServiceRegistry;
 import github.qiao712.rpc.transport.RpcClient;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -30,8 +29,8 @@ public class ForkingCluster extends AbstractCluster{
             new ArrayBlockingQueue<>(100),
             new ThreadPoolExecutor.CallerRunsPolicy());
 
-    public ForkingCluster(RpcClient rpcClient, ServiceDiscovery serviceDiscovery, LoadBalance loadBalance) {
-        super(rpcClient, serviceDiscovery, loadBalance);
+    public ForkingCluster(RpcClient rpcClient, ServiceRegistry serviceRegistry, LoadBalance loadBalance) {
+        super(rpcClient, serviceRegistry, loadBalance);
     }
 
     @Override

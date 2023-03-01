@@ -3,9 +3,9 @@ package github.qiao712.autoconfig;
 import github.qiao712.processor.RpcServiceReferenceBeanPostProcessor;
 import github.qiao712.rpc.proto.SerializationType;
 import github.qiao712.rpc.proxy.RpcProxyFactory;
-import github.qiao712.rpc.registry.ServiceDiscovery;
+import github.qiao712.rpc.registry.ServiceRegistry;
 import github.qiao712.rpc.registry.zookeeper.CuratorUtils;
-import github.qiao712.rpc.registry.zookeeper.ZookeeperServiceDiscovery;
+import github.qiao712.rpc.registry.zookeeper.ZookeeperServiceRegistry;
 import github.qiao712.rpc.transport.RpcClient;
 import github.qiao712.rpc.transport.netty.client.NettyRpcClient;
 import org.slf4j.Logger;
@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Configuration;
 import javax.annotation.Resource;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.net.InetSocketAddress;
 
 /**
  * 客户端相关组件注册
@@ -33,14 +32,13 @@ public class MyRPCClientAutoConfiguration {
     MyRPCProperties properties;
 
     /**
-     * 服务发现组件
+     * 服务注册与发现组件
      */
     @Bean
     @ConditionalOnMissingBean
-    public ServiceDiscovery serviceDiscovery(){
+    public ServiceRegistry serviceRegistry(){
         if(properties.getRegistryAddresses() != null && properties.getRegistryAddresses().length != 0){
-            InetSocketAddress providerAddress = new InetSocketAddress(properties.getHost(), properties.getPort());
-            return new ZookeeperServiceDiscovery(CuratorUtils.getAddressString(properties.getRegistryAddresses()));
+            return new ZookeeperServiceRegistry(CuratorUtils.getAddressString(properties.getRegistryAddresses()));
         }
         logger.error("未配置注册中新地址");
         return null;
@@ -64,7 +62,7 @@ public class MyRPCClientAutoConfiguration {
         }
 
         //全局的调用超时时间
-        rpcClient.setResponseTimeout(properties.getResponseTimeout() <= 0 ? 0 : properties.getResponseTimeout());
+        rpcClient.setResponseTimeout(Math.max(properties.getResponseTimeout(), 0));
 
         return rpcClient;
     }
@@ -94,9 +92,9 @@ public class MyRPCClientAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public RpcServiceReferenceBeanPostProcessor rpcServiceReferenceBeanPostProcessor(ServiceDiscovery serviceDiscovery,
+    public RpcServiceReferenceBeanPostProcessor rpcServiceReferenceBeanPostProcessor(ServiceRegistry serviceRegistry,
                                                                                      RpcClient rpcClient,
                                                                                      RpcProxyFactory rpcProxyFactory){
-        return new RpcServiceReferenceBeanPostProcessor(rpcProxyFactory, rpcClient, serviceDiscovery);
+        return new RpcServiceReferenceBeanPostProcessor(rpcProxyFactory, rpcClient, serviceRegistry);
     }
 }

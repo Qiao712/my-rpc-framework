@@ -19,10 +19,63 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TestSomething {
+    @Test
+    public void testSyncSet() throws InterruptedException {
+        Set<Integer> set = Collections.synchronizedSet(new HashSet<>());
+        set.add(123);
+
+        Thread thread1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (Integer integer : set) {
+                    System.out.println("for ---");
+                    try {
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("-----");
+                }
+            }
+        });
+
+        Thread thread2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                set.add(12);
+                System.out.println("added");
+            }
+        });
+
+        thread1.start();
+        Thread.sleep(100);
+        thread2.start();
+
+        thread1.join();
+        thread2.join();
+    }
+
+    @Test
+    public void testPattern(){
+        final Pattern pathPattern = Pattern.compile("/my-rpc/(.*)/providers/.*");
+        //节点所在的服务名
+        String serviceName = null;
+        Matcher matcher = pathPattern.matcher("/my-rpc/test.Service1/providers/123123123");
+        if(matcher.find() && matcher.groupCount() == 1){
+            serviceName = matcher.group(1);
+        }
+        System.out.println("service " + serviceName);
+    }
+
     @Test
     public void testSerializer(){
         Serializer serializer = new JDKSerializer();

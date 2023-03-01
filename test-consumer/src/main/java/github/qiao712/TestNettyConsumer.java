@@ -1,17 +1,14 @@
 package github.qiao712;
 
 import github.qiao712.rpc.cluster.FailoverCluster;
-import github.qiao712.rpc.cluster.ForkingCluster;
-import github.qiao712.rpc.loadbalance.ConsistentHashLoadBalance;
 import github.qiao712.rpc.loadbalance.LoadBalance;
-import github.qiao712.rpc.loadbalance.RandomLoadBalance;
 import github.qiao712.rpc.loadbalance.RoundRobinLoadBalance;
 import github.qiao712.rpc.proto.SerializationType;
 import github.qiao712.rpc.proxy.JDKRpcProxyFactory;
 import github.qiao712.rpc.proxy.RpcProxyFactory;
 import github.qiao712.rpc.registry.ProviderURL;
-import github.qiao712.rpc.registry.ServiceDiscovery;
-import github.qiao712.rpc.registry.zookeeper.ZookeeperServiceDiscovery;
+import github.qiao712.rpc.registry.ServiceRegistry;
+import github.qiao712.rpc.registry.zookeeper.ZookeeperServiceRegistry;
 import github.qiao712.rpc.transport.RpcClient;
 import github.qiao712.rpc.transport.netty.client.NettyRpcClient;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -38,11 +34,11 @@ public class TestNettyConsumer {
         rpcClient.setResponseTimeout(1000L);
         rpcClient.setHeartbeatInterval(5000);
 
-        //服务发现组件
-        ServiceDiscovery serviceDiscovery = new ZookeeperServiceDiscovery(new InetSocketAddress("114.116.245.83", 2181));
+        //注册中心
+        ServiceRegistry serviceRegistry = new ZookeeperServiceRegistry(new InetSocketAddress("114.116.245.83", 2181));
         //订阅服务
-        serviceDiscovery.subscribeService(TestService.class.getCanonicalName());
-        List<ProviderURL> providers = serviceDiscovery.getProviders(TestService.class.getCanonicalName());
+        serviceRegistry.subscribe(TestService.class.getCanonicalName());
+        List<ProviderURL> providers = serviceRegistry.getProviders(TestService.class.getCanonicalName());
         System.out.println("服务提供者列表:");
         for (ProviderURL provider : providers) {
             System.out.println(provider);
@@ -52,10 +48,8 @@ public class TestNettyConsumer {
         LoadBalance loadBalance = new RoundRobinLoadBalance();
 
         //创建Cluster，整合RpcClient, ServiceDiscovery, LoadBalance
-        FailoverCluster cluster = new FailoverCluster(rpcClient, serviceDiscovery, loadBalance);
+        FailoverCluster cluster = new FailoverCluster(rpcClient, serviceRegistry, loadBalance);
         cluster.setRetries(100);
-//        ForkingCluster cluster = new ForkingCluster(rpcClient, serviceDiscovery, loadBalance);
-//        cluster.setForks(3);
 
         //创建一个桩对象进行调用
         RpcProxyFactory rpcProxyFactory = new JDKRpcProxyFactory();

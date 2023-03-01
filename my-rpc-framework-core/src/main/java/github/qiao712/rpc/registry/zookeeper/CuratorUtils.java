@@ -31,4 +31,11 @@ public class CuratorUtils {
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         return stringBuilder.toString();
     }
+
+    /**
+     * 递归地创建临时节点(路径中没有的节点也创建为临时节点)
+     */
+    public static void createEphemeralNode(String path){
+        
+    }
 }

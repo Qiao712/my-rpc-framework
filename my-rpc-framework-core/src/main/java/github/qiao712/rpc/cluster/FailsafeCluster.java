@@ -6,7 +6,7 @@ import github.qiao712.rpc.proto.RpcRequest;
 import github.qiao712.rpc.proto.RpcResponse;
 import github.qiao712.rpc.proto.RpcResponseCode;
 import github.qiao712.rpc.registry.ProviderURL;
-import github.qiao712.rpc.registry.ServiceDiscovery;
+import github.qiao712.rpc.registry.ServiceRegistry;
 import github.qiao712.rpc.transport.RpcClient;
 
 import java.util.List;
@@ -16,8 +16,8 @@ import java.util.List;
  * 应注意返回值类型为内置类型时，自动解包引发空指针异常
  */
 public class FailsafeCluster extends AbstractCluster {
-    public FailsafeCluster(RpcClient rpcClient, ServiceDiscovery serviceDiscovery, LoadBalance loadBalance) {
-        super(rpcClient, serviceDiscovery, loadBalance);
+    public FailsafeCluster(RpcClient rpcClient, ServiceRegistry serviceRegistry, LoadBalance loadBalance) {
+        super(rpcClient, serviceRegistry, loadBalance);
     }
 
     @Override

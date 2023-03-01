@@ -1,76 +1,100 @@
 package github.qiao712.rpc.registry.zookeeper;
 
+import github.qiao712.rpc.exception.RpcFrameworkException;
+import github.qiao712.rpc.registry.AbstractServiceRegistry;
 import github.qiao712.rpc.registry.ProviderURL;
-import github.qiao712.rpc.registry.ServiceRegistry;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
-import org.apache.curator.retry.RetryForever;
+import org.apache.curator.retry.RetryNTimes;
+import org.apache.zookeeper.AddWatchMode;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
 
-import java.io.Closeable;
 import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
-public class ZookeeperServiceRegistry implements ServiceRegistry, Closeable {
+public class ZookeeperServiceRegistry extends AbstractServiceRegistry {
     private final static String NAME_SPACE = "my-rpc";
     private final CuratorFramework client;
 
-    private final ConcurrentMap<String, ProviderURL> registeredServices = new ConcurrentHashMap<>();
-    private final ConcurrentSkipListSet<String> failToDelete = new ConcurrentSkipListSet<>();   //删除失败的节点，等连接恢复后重试
+    /**
+     * 用于监听service_xxx/provider节点及其后代变更(与Watcher相比CuratorWatcher可以抛出异常)
+     */
+    CuratorWatcher watcher = new ServiceNodeWatcher();
+
+    /**
+     * 订阅的服务的提供者列表
+     */
+    private final ConcurrentMap<String, List<ProviderURL>> providerMap = new ConcurrentHashMap<>();
 
     public ZookeeperServiceRegistry(InetSocketAddress... zookeeperAddresses){
         this(CuratorUtils.getAddressString(zookeeperAddresses));
     }
 
     public ZookeeperServiceRegistry(String connectString){
-
-        RetryPolicy retryPolicy = new RetryForever(10000);
         this.client = CuratorFrameworkFactory.builder()
                 .connectString(connectString)
-                .retryPolicy(retryPolicy)
+                .retryPolicy(new RetryNTimes(1, 1000))
                 .namespace(NAME_SPACE)
-                .sessionTimeoutMs(60000)    //60s
+                .sessionTimeoutMs(10000)    //60s
                 .build();
 
-        this.client.getConnectionStateListenable().addListener(new SessionChangeListener());
-
+        //监听连接状态
+        this.client.getConnectionStateListenable().addListener(new ConnectionStateListenerImpl());
         this.client.start();
     }
 
     @Override
-    public void register(ProviderURL url) {
-        //添加临时节点  /service-name(interface name)/providers/provider-address(host:port)
-        try {
-            //服务提供者元数据
-            registeredServices.put(url.getService(), url);
-
-            String providerNodePath = getProviderNodePath(url);
-            failToDelete.remove(providerNodePath);
-            client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(providerNodePath);
-        } catch (Exception e) {
-            log.error("注册服务 " + url + " 失败", e);
-        }
+    protected void doRegister(ProviderURL providerURL) throws Exception {
+        String providerNodePath = toServiceProvidersNodePath(providerURL.getService()) + "/" + providerURL;
+        client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(providerNodePath);
     }
 
     @Override
-    public void unregister(String serviceName) {
-        ProviderURL provider = registeredServices.remove(serviceName);
-        if(provider == null) return;
-        String providerNodePath = getProviderNodePath(provider);
+    protected void doUnregister(ProviderURL providerURL) throws Exception {
+        String providerNodePath = toServiceProvidersNodePath(providerURL.getService()) + "/" + providerURL;
+        client.delete().forPath(providerNodePath);
+    }
 
-        try {
-            client.delete().forPath(providerNodePath);
-        } catch (Exception e) {
-            failToDelete.add(providerNodePath);
-            log.error("服务取消注册失败", e);
-        }
+    @Override
+    protected void doSubscribe(String serviceName) throws Exception {
+        //全量拉取服务提供者列表
+        providerMap.compute(serviceName, (k, v)->{
+            try {
+                return fetchProviders(k);
+            } catch (Exception e) {
+                throw new RpcFrameworkException("拉取服务提供者列表", e);
+            }
+        });
+
+        //注册监听器
+        client.watchers().add().withMode(AddWatchMode.PERSISTENT_RECURSIVE).usingWatcher(watcher).forPath(toServiceProvidersNodePath(serviceName));
+    }
+
+    @Override
+    protected void doUnsubscribe(String serviceName) throws Exception {
+        //移除Watcher
+        client.watchers().remove(watcher).forPath(toServiceProvidersNodePath(serviceName));
+        //删除本地列表
+        providerMap.remove(serviceName);
+    }
+
+    @Override
+    protected List<ProviderURL> doGetProviders(String serviceName) {
+        return providerMap.getOrDefault(serviceName, Collections.emptyList());
     }
 
     @Override
@@ -79,63 +103,110 @@ public class ZookeeperServiceRegistry implements ServiceRegistry, Closeable {
     }
 
     /**
-     * 生成表示该提供者的节点的路径
-     *  "/service-name(interface name)/providers/provider-address(host:port)"
+     * 拉取所有服务提供者节点
      */
-    private String getProviderNodePath(ProviderURL provider){
-        return '/' + provider.getService() + "/providers/" + provider;
+    private List<ProviderURL> fetchProviders(String serviceName) throws Exception {
+        List<String> providerNodePaths = client.getChildren().forPath(toServiceProvidersNodePath(serviceName));
+        return providerNodePaths.stream().map(this::toProviderURL).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     /**
-     * 重新注册所有节点
+     * 生成表示该服务的提供者的节点的路径
+     *  "/service-name/providers"
      */
-    private void registerAll(){
-        registeredServices.forEach((serviceName, provider)->{
-            try {
-                client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(getProviderNodePath(provider));
-            } catch (Exception e) {
-                log.error("注册服务 " + serviceName + " 失败", e);
+    private String toServiceProvidersNodePath(String serviceName){
+        return '/' + serviceName + "/providers";
+    }
+
+    /**
+     * 从节点路径中获取ProviderURL
+     * "/service-name/providers/127.0.0.1:2022?service=service-name&weight=123"
+     */
+    private ProviderURL toProviderURL(String path){
+        String[] nodeNames = path.split("/");
+        if(nodeNames.length == 0) return null;
+
+        String providerNodeName = nodeNames[nodeNames.length - 1];
+        try{
+            return ProviderURL.parseURL(providerNodeName);
+        }catch (Throwable e){
+            log.error("提供者URL格式错误", e);
+        }
+        return null;
+    }
+
+    public class ServiceNodeWatcher implements CuratorWatcher {
+        final Pattern pathPattern = Pattern.compile("/(.*)/providers/.*");
+
+        @Override
+        public void process(WatchedEvent event) throws Exception {
+            String path = event.getPath();
+            if(event.getPath() == null) return;
+
+            //节点所在的服务名
+            String serviceName = null;
+            Matcher matcher = pathPattern.matcher(path);
+            if(matcher.find()){
+                serviceName = matcher.group(1);
             }
-        });
-    }
+            log.debug("ServiceName: {}", serviceName);
+
+            //若子节点有变化，则重新拉取
+            if(event.getType() == Watcher.Event.EventType.NodeCreated ||
+                    event.getType() == Watcher.Event.EventType.NodeDeleted ||
+                    event.getType() == Watcher.Event.EventType.NodeChildrenChanged){
+                log.debug("重新拉取服务提供者列表");
+                providerMap.computeIfPresent(serviceName, (k, v) -> {       //只在订阅时才进行拉取
+                    try {
+                        return fetchProviders(k);
+                    } catch (Exception e) {
+                        throw new RpcFrameworkException("重新拉取服务提供者列表失败", e);
+                    }
+                });
+            }
+        }
+    };
 
     /**
-     * 用于监听Session的变化，以重新注册服务信息
+     * 用于监听Session的变化，以在Session失效后，重新注册\订阅
      */
-    private class SessionChangeListener implements ConnectionStateListener {
+    private class ConnectionStateListenerImpl implements ConnectionStateListener {
         //会话是否改变，重新注册
-        private boolean sessionChanged = false;
+        private long lastSessionId = -1L;
 
         @Override
         public void stateChanged(CuratorFramework client, ConnectionState newState) {
+            long currentSessionId = -1L;
+            try {
+                currentSessionId = client.getZookeeperClient().getZooKeeper().getSessionId();
+            } catch (Exception e) {
+                log.warn("获取session失败");
+            }
+
             switch (newState){
                 case CONNECTED:{
-                    log.info("已连接至Zookeeper");
+                    log.info("已连接至Zookeeper (SessionId: {})", currentSessionId);
+                    break;
+                }
+
+                case SUSPENDED:{
+                    log.info("与Zookeeper断开链接 (SessionId: {})", currentSessionId);
                     break;
                 }
 
                 case RECONNECTED:{
-                    log.info("重新连接至Zookeeper");
-                    if(sessionChanged){
-                        //重新注册服务
-                        registerAll();
-                        sessionChanged = false;
-                    }
+                    log.info("重新连接至Zookeeper (SessionId: {})", currentSessionId);
 
-                    //重新删除 删除失败的节点
-                    for (String nodePath : failToDelete) {
-                        try {
-                            client.delete().forPath(nodePath);
-                        } catch (Exception e) {
-                            log.error("服务取消注册失败", e);
-                        }
+                    if(lastSessionId != currentSessionId){
+                        log.info("Zookeeper会话变更");
+                        lastSessionId = currentSessionId;
+                        recover();
                     }
                     break;
                 }
 
                 case LOST:{
-                    log.info("会话失效");
-                    sessionChanged = true;
+                    log.info("Zookeeper会话失效  (SessionId: {})", currentSessionId);
                     break;
                 }
             }
