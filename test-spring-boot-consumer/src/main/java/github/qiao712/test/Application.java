@@ -18,6 +18,6 @@ public class Application {
 
         System.in.read();
 
-        bean.testLoadBalance();
+        bean.testRPC();
     }
 }

@@ -106,6 +106,12 @@ public class TestSomething {
         System.out.println(originMessage);
     }
 
+    @Test
+    public void idGenerator(){
+        AutoIncrementIdGenerator idGenerator = AutoIncrementIdGenerator.getInstance();
+
+    }
+
 
 //    @Test
 //    public void testKryo(){
