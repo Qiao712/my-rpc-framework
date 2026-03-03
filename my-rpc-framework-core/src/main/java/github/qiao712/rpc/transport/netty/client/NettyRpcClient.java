@@ -40,10 +40,11 @@ public class NettyRpcClient extends AbstractRpcClient {
         } catch (InterruptedException e) {
             throw new RpcException("请求被中断", e);
         } catch (TimeoutException e) {
-            waitingRequestPool.abandonRequest(requestMessage.getRequestId());
             throw new RpcException("响应超时", e);
         } catch (ExecutionException e) {
             throw new RpcException("响应获取失败", e.getCause());
+        } finally {
+            waitingRequestPool.removeRequest(requestMessage.getRequestId());
         }
     }
 

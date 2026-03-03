@@ -48,12 +48,9 @@ public class WaitingRequestPool {
     }
 
     /**
-     * 抛弃请求，不再等待
+     * 移除请求，不再等待
      */
-    public void abandonRequest(int requestId){
-        CompletableFuture<RpcResponse> responseFuture = waitingRequests.remove(requestId);
-        if(responseFuture == null){
-            throw new RpcException("请求不存在(requestId = " + requestId + ")");
-        }
+    public void removeRequest(int requestId){
+        waitingRequests.remove(requestId);
     }
 }
