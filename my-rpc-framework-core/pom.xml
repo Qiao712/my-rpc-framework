@@ -53,6 +53,13 @@
             <artifactId>slf4j-api</artifactId>
             <version>1.7.35</version>
         </dependency>
+
+        <!--CGLib-->
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>3.3.0</version>
+        </dependency>
     </dependencies>
 
 </project>
