@@ -19,8 +19,11 @@ public @interface RpcServiceReference {
 
     Class<? extends Cluster> cluster() default FailoverCluster.class;
 
-    //容错策略为Failover时的重试次数
+    //最大重试次数
     int retries() default 10;
+
+    //重试间隔(毫秒)(Failback策略使用)
+    int retryInterval() default 1000;
 
     //容错策略为Forking同时请求的提供者的数量
     int forks() default 10;

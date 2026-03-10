@@ -1,6 +1,7 @@
 package github.qiao712.rpc.transport.netty.client;
 
 import github.qiao712.rpc.exception.RpcClientException;
+import github.qiao712.rpc.exception.RpcException;
 import github.qiao712.rpc.proto.Message;
 import github.qiao712.rpc.transport.netty.RpcMessageCodec;
 import io.netty.bootstrap.Bootstrap;
@@ -67,7 +68,7 @@ public class ChannelProvider {
                         ChannelFuture channelFuture = bootstrap.connect(socketAddress);
                         return channelFuture.sync().channel();
                     } catch (Throwable e) {
-                        throw new RpcClientException("无法连接至" + socketAddress, e);
+                        throw new RpcException("无法连接至" + socketAddress, e);
                     }
                 }else{
                     return channel;

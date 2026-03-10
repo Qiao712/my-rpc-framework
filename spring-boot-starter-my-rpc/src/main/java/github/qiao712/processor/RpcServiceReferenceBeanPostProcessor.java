@@ -4,6 +4,7 @@ import github.qiao712.annotation.RpcServiceReference;
 import github.qiao712.factory.ClusterFactory;
 import github.qiao712.factory.LoadBalanceFactory;
 import github.qiao712.rpc.cluster.Cluster;
+import github.qiao712.rpc.cluster.FailbackCluster;
 import github.qiao712.rpc.cluster.FailoverCluster;
 import github.qiao712.rpc.cluster.ForkingCluster;
 import github.qiao712.rpc.loadbalance.LoadBalance;
@@ -53,6 +54,10 @@ public class RpcServiceReferenceBeanPostProcessor implements InstantiationAwareB
                 }else if(cluster instanceof ForkingCluster){
                     //设置同时请求的提供者的数量
                     ((ForkingCluster) cluster).setForks(serviceReference.forks());
+                }else if(cluster instanceof FailbackCluster){
+                    //设置重试次数和重试间隔
+                    ((FailbackCluster) cluster).setMaxRetries(serviceReference.retries());
+                    ((FailbackCluster) cluster).setRetryInterval(serviceReference.retryInterval());
                 }
 
                 //订阅服务
