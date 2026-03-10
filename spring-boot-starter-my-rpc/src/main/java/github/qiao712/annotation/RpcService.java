@@ -1,5 +1,7 @@
 package github.qiao712.annotation;
 
+import org.springframework.stereotype.Component;
+
 import java.lang.annotation.*;
 
 /**
@@ -9,6 +11,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 @Inherited
+@Component
 public @interface RpcService {
     //权重
     int weight() default 0;

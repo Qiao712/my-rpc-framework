@@ -134,7 +134,7 @@ public abstract class AbstractServiceRegistry implements ServiceRegistry {
         RetryTask newTask = new AbstractRetryTask() {
             @Override
             public void retry() throws Exception {
-                doRegister(providerURL);
+                doRegister(providerURL);    // 如果doRegister抛出异常，则由RetryTimer再次加入重试队列中进行重试
                 removeFailedRegistered(providerURL);
             }
         };

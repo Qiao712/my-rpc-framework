@@ -2,6 +2,7 @@ package github.qiao712.annotation;
 
 import github.qiao712.autoconfig.MyRPCClientAutoConfiguration;
 import org.springframework.context.annotation.Import;
+import org.springframework.stereotype.Component;
 
 import java.lang.annotation.*;
 

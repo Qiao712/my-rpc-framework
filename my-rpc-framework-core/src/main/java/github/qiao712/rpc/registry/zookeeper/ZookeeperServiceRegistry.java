@@ -32,6 +32,7 @@ public class ZookeeperServiceRegistry extends AbstractServiceRegistry {
 
     /**
      * 用于监听service_xxx/provider节点及其后代变更(与Watcher相比CuratorWatcher可以抛出异常)
+     * Curator客户端的Watcher可以在会话重建后自动重新建立
      */
     CuratorWatcher watcher = new ServiceNodeWatcher();
 
