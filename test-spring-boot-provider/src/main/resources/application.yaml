@@ -1,5 +1,6 @@
 my-rpc:
-  registry-addresses: 114.116.245.83:2181
+  registry-addresses: 10.102.34.198:2181
   corePoolSize: 10
   maxPoolSize: 100
   port: 9722
+  host: 110.102.34.1

@@ -1,3 +1,3 @@
 my-rpc:
-  registry-addresses: 114.116.245.83:2181
-  serializer: Jsob
+  registry-addresses: 10.102.34.198:2181
+  proxy-factory: github.qiao712.rpc.proxy.CglibRpcProxyFactory

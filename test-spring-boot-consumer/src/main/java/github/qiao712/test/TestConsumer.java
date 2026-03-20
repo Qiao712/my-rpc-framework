@@ -1,6 +1,7 @@
 package github.qiao712.test;
 
 import github.qiao712.annotation.RpcServiceReference;
+import github.qiao712.rpc.cluster.FailbackCluster;
 import github.qiao712.rpc.loadbalance.ConsistentHashLoadBalance;
 import github.qiao712.rpc.loadbalance.RandomLoadBalance;
 import github.qiao712.rpc.loadbalance.RoundRobinLoadBalance;
@@ -14,7 +15,7 @@ import java.util.concurrent.ConcurrentMap;
 
 @Component
 public class TestConsumer{
-    @RpcServiceReference(loadbalance = RoundRobinLoadBalance.class)
+    @RpcServiceReference(loadbalance = RoundRobinLoadBalance.class, cluster = FailbackCluster.class)
     private TestService testService;
 
     public void testLoadBalance(){
